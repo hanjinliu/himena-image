@@ -1,7 +1,7 @@
 from __future__ import annotations
-from typing import Any
 from himena import WidgetDataModel
 import impy as ip
+from himena.consts import StandardType
 from himena.model_meta import ImageMeta
 
 
@@ -16,9 +16,9 @@ def image_to_model(
         channel_axis = None
     return WidgetDataModel(
         value=img,
-        type="image",
+        type=StandardType.IMAGE,
         title=title,
-        additional_data=ImageMeta(
+        metadata=ImageMeta(
             axes=[str(a) for a in img.axes],
             scale=list(img.scale.values()),
             channel_axis=channel_axis,
@@ -27,7 +27,7 @@ def image_to_model(
     )
 
 
-def make_dims_annotation(model: WidgetDataModel[ip.ImgArray]) -> dict[str, Any]:
+def make_dims_annotation(model: WidgetDataModel[ip.ImgArray]) -> list[tuple[str, int]]:
     img = model.value
     if not isinstance(img, ip.ImgArray):
         choices = [("2 (xy)", 2)]
@@ -35,4 +35,4 @@ def make_dims_annotation(model: WidgetDataModel[ip.ImgArray]) -> dict[str, Any]:
         choices = [("2 (xy)", 2)]
     else:
         choices = [("2 (xy)", 2), ("3 (xyz)", 3)]
-    return {"choices": choices}
+    return choices

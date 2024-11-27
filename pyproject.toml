@@ -63,3 +63,9 @@ exclude_lines = [
   "if __name__ == .__main__.:",
   "if TYPE_CHECKING:",
 ]
+
+[project.entry-points."himena.plugin"]
+io = "himena_image.io"
+new = "himena_image.new"
+processing = "himena_image.processing"
+widgets = "himena_image.widgets"

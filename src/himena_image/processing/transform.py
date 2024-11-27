@@ -2,14 +2,17 @@ from typing import Annotated, Literal
 import impy as ip
 
 from himena import WidgetDataModel, Parametric
+from himena.consts import StandardType
 from himena.plugins import register_function
 from himena_image.consts import PaddingMode
+
+MENUS = ["image/transform", "/model_menu/transform"]
 
 
 @register_function(
     title="Shift ...",
-    menus="image/transform",
-    types=["image"],
+    menus=MENUS,
+    types=[StandardType.IMAGE],
 )
 def shift(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
     def run_shift(
@@ -28,8 +31,8 @@ def shift(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
 
 @register_function(
     title="Rotate ...",
-    menus="image/transform",
-    types=["image"],
+    menus=MENUS,
+    types=[StandardType.IMAGE],
     preview=True,
 )
 def rotate(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
@@ -51,8 +54,8 @@ def rotate(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
 
 @register_function(
     title="Flip ...",
-    menus="image/transform",
-    types=["image"],
+    menus=MENUS,
+    types=[StandardType.IMAGE],
 )
 def flip(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
     def run_flip(
@@ -66,8 +69,8 @@ def flip(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
 
 @register_function(
     title="Zoom ...",
-    menus="image/transform",
-    types=["image"],
+    menus=MENUS,
+    types=[StandardType.IMAGE],
 )
 def zoom(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
     def run_zoom(
@@ -91,8 +94,8 @@ def zoom(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
 
 @register_function(
     title="Bin ...",
-    menus="image/transform",
-    types=["image"],
+    menus=MENUS,
+    types=[StandardType.IMAGE],
 )
 def bin(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
     def run_bin(

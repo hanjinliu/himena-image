@@ -1,23 +1,29 @@
 import impy as ip
 
 from himena import WidgetDataModel, Parametric
-from himena.plugins import register_function, configure_gui
+from himena.plugins import register_function, configure_gui, configure_submenu
 from himena_image.utils import make_dims_annotation
+from himena.consts import StandardType
 
-MENU = "image/fft"
+MENUS = ["image/fft", "/model_menu/fft"]
+
+configure_submenu("image/fft", title="Fourier transform")
+configure_submenu("/model_menu/fft", title="Fourier transform")
 
 
 @register_function(
     title="FFT ...",
-    menus=MENU,
-    types=["image"],
+    menus=MENUS,
+    types=[StandardType.IMAGE],
 )
 def fft(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
+    """Fast Fourier transformation of an image."""
+
     @configure_gui(dimension={"choices": make_dims_annotation(model)})
     def run_fft(
         origin_in_center: bool = True,
         double_precision: bool = False,
-        dimension: int = 2,
+        dimension=2,
     ) -> WidgetDataModel[ip.ImgArray]:
         out = ip.asarray(model.value).fft(
             shift=origin_in_center,
@@ -31,8 +37,8 @@ def fft(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
 
 @register_function(
     title="IFFT ...",
-    menus=MENU,
-    types=["image"],
+    menus=MENUS,
+    types=[StandardType.IMAGE],
 )
 def ifft(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
     @configure_gui(dimension={"choices": make_dims_annotation(model)})
@@ -40,7 +46,7 @@ def ifft(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
         return_real: bool = True,
         origin_in_center: bool = True,
         double_precision: bool = False,
-        dimension: int = 2,
+        dimension=2,
     ) -> WidgetDataModel[ip.ImgArray]:
         out = ip.asarray(model.value).ifft(
             real=return_real,
@@ -55,8 +61,8 @@ def ifft(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
 
 @register_function(
     title="Low-pass Filter ...",
-    menus=MENU,
-    types=["image"],
+    menus=MENUS,
+    types=[StandardType.IMAGE],
     preview=True,
 )
 def lowpass_filter(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
@@ -64,7 +70,7 @@ def lowpass_filter(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArra
     def run_lowpass_filter(
         cutoff: float = 0.2,
         order: int = 2,
-        dimension: int = 2,
+        dimension=2,
     ) -> WidgetDataModel[ip.ImgArray]:
         out = ip.asarray(model.value).lowpass_filter(
             cutoff=cutoff, order=order, dims=dimension
@@ -76,8 +82,8 @@ def lowpass_filter(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArra
 
 @register_function(
     title="High-pass Filter ...",
-    menus=MENU,
-    types=["image"],
+    menus=MENUS,
+    types=[StandardType.IMAGE],
     preview=True,
 )
 def highpass_filter(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
@@ -85,7 +91,7 @@ def highpass_filter(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArr
     def run_highpass_filter(
         cutoff: float = 0.2,
         order: int = 2,
-        dimension: int = 2,
+        dimension=2,
     ) -> WidgetDataModel[ip.ImgArray]:
         out = ip.asarray(model.value).highpass_filter(
             cutoff=cutoff, order=order, dims=dimension
@@ -97,8 +103,8 @@ def highpass_filter(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArr
 
 @register_function(
     title="Band-pass Filter ...",
-    menus=MENU,
-    types=["image"],
+    menus=MENUS,
+    types=[StandardType.IMAGE],
     preview=True,
 )
 def bandpass_filter(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
@@ -107,7 +113,7 @@ def bandpass_filter(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArr
         low_cutoff: float = 0.2,
         high_cutoff: float = 0.5,
         order: int = 2,
-        dimension: int = 2,
+        dimension=2,
     ) -> WidgetDataModel[ip.ImgArray]:
         out = ip.asarray(model.value).bandpass_filter(
             low_cutoff=low_cutoff, high_cutoff=high_cutoff, order=order, dims=dimension

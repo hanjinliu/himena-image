@@ -1,6 +1,6 @@
 from typing import Literal, NamedTuple
 from himena import WidgetDataModel, Parametric
-from himena.plugins import register_new_provider
+from himena.plugins import register_function
 from himena_image.utils import image_to_model
 import impy as ip
 
@@ -12,7 +12,7 @@ class SampleImage(NamedTuple):
     title: str | None = None
 
 
-MENU = "file/new/skimage samples"
+MENU = "file/samples/skimage samples"
 SKIMAGE_SAMPLES = [
     SampleImage("astronaut", True, "yxc"),
     SampleImage("brain", False, "zyx"),
@@ -53,7 +53,7 @@ SKIMAGE_SAMPLES = [
 ]
 
 
-@register_new_provider(title="binary blobs", menus=MENU)
+@register_function(title="binary blobs", menus=MENU)
 def binary_blobs() -> Parametric[ip.ImgArray]:
     from skimage import data
 
@@ -76,7 +76,7 @@ def binary_blobs() -> Parametric[ip.ImgArray]:
     return make_binary_blobs
 
 
-@register_new_provider(title="stereo motorcycle", menus=MENU)
+@register_function(title="stereo motorcycle", menus=MENU)
 def stereo_motorcycle() -> list[WidgetDataModel[ip.ImgArray]]:
     from skimage import data
 
@@ -107,4 +107,4 @@ def _make_provider(sample: SampleImage):
 
 
 for sample in SKIMAGE_SAMPLES:
-    register_new_provider(_make_provider(sample), title=sample.filename, menus=MENU)
+    register_function(_make_provider(sample), title=sample.filename, menus=MENU)

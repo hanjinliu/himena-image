@@ -1,4 +1,5 @@
 from himena_image.widgets.viewer import HimenaImageViewer
-from himena.qt import register_frontend_widget
+from himena.qt import register_widget
+from himena.consts import StandardType
 
-register_frontend_widget("image", HimenaImageViewer)
+register_widget(StandardType.IMAGE, HimenaImageViewer)

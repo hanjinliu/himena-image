@@ -3,6 +3,7 @@ import impy as ip
 
 from himena import WidgetDataModel, Parametric, AppContext
 from himena.plugins import register_function
+from himena.consts import StandardType
 from himena_image.utils import image_to_model
 
 MENU = "image/calculate"
@@ -15,8 +16,12 @@ MENU = "image/calculate"
 )
 def add() -> Parametric[ip.ImgArray]:
     def run_add(
-        image_1: Annotated[WidgetDataModel[ip.ImgArray], {"types": ["image"]}],
-        image_2: Annotated[WidgetDataModel[ip.ImgArray], {"types": ["image"]}],
+        image_1: Annotated[
+            WidgetDataModel[ip.ImgArray], {"types": [StandardType.IMAGE]}
+        ],
+        image_2: Annotated[
+            WidgetDataModel[ip.ImgArray], {"types": [StandardType.IMAGE]}
+        ],
     ) -> WidgetDataModel[ip.ImgArray]:
         out = image_1.value + image_2.value
         return image_1.with_value(out)
@@ -31,8 +36,12 @@ def add() -> Parametric[ip.ImgArray]:
 )
 def subtract() -> Parametric[ip.ImgArray]:
     def run_subtract(
-        image_1: Annotated[WidgetDataModel[ip.ImgArray], {"types": ["image"]}],
-        image_2: Annotated[WidgetDataModel[ip.ImgArray], {"types": ["image"]}],
+        image_1: Annotated[
+            WidgetDataModel[ip.ImgArray], {"types": [StandardType.IMAGE]}
+        ],
+        image_2: Annotated[
+            WidgetDataModel[ip.ImgArray], {"types": [StandardType.IMAGE]}
+        ],
     ) -> WidgetDataModel[ip.ImgArray]:
         out = image_1.value - image_2.value
         return image_1.with_value(out)
@@ -47,8 +56,12 @@ def subtract() -> Parametric[ip.ImgArray]:
 )
 def multiply() -> Parametric[ip.ImgArray]:
     def run_multiply(
-        image_1: Annotated[WidgetDataModel[ip.ImgArray], {"types": ["image"]}],
-        image_2: Annotated[WidgetDataModel[ip.ImgArray], {"types": ["image"]}],
+        image_1: Annotated[
+            WidgetDataModel[ip.ImgArray], {"types": [StandardType.IMAGE]}
+        ],
+        image_2: Annotated[
+            WidgetDataModel[ip.ImgArray], {"types": [StandardType.IMAGE]}
+        ],
     ) -> WidgetDataModel[ip.ImgArray]:
         out = image_1.value * image_2.value
         return image_1.with_value(out)
@@ -59,7 +72,7 @@ def multiply() -> Parametric[ip.ImgArray]:
 @register_function(
     title="Projection ...",
     menus=MENU,
-    types=["image"],
+    types=[StandardType.IMAGE],
 )
 def projection(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
     def run_projection(
@@ -75,11 +88,8 @@ def projection(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
 @register_function(
     title="Invert",
     menus=MENU,
-    types=["image"],
+    types=[StandardType.IMAGE],
 )
-def invert(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
-    def run_invert() -> WidgetDataModel[ip.ImgArray]:
-        out = -model.value
-        return model.with_value(out)
-
-    return run_invert
+def invert(model: WidgetDataModel[ip.ImgArray]) -> WidgetDataModel[ip.ImgArray]:
+    out = -model.value
+    return model.with_value(out)
