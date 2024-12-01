@@ -54,7 +54,7 @@ SKIMAGE_SAMPLES = [
 
 
 @register_function(title="binary blobs", menus=MENU)
-def binary_blobs() -> Parametric[ip.ImgArray]:
+def binary_blobs() -> Parametric:
     from skimage import data
 
     def make_binary_blobs(
@@ -107,4 +107,9 @@ def _make_provider(sample: SampleImage):
 
 
 for sample in SKIMAGE_SAMPLES:
-    register_function(_make_provider(sample), title=sample.filename, menus=MENU)
+    register_function(
+        _make_provider(sample),
+        title=sample.filename,
+        menus=MENU,
+        command_id=f"himena-image:skimage-sample-{sample}",
+    )

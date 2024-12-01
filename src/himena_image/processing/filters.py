@@ -15,14 +15,13 @@ MENUS = ["image/filter", "/model_menu/filter"]
     title="Gaussian Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    preview=True,
 )
-def gaussian_filter(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
-    @configure_gui(dimension={"choices": make_dims_annotation(model)})
+def gaussian_filter(model: WidgetDataModel) -> Parametric:
+    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
     def run_gaussian_filter(
         sigma: Annotated[float, {"min": 0.0}] = 1.0,
         dimension: int = 2,
-    ) -> WidgetDataModel[ip.ImgArray]:
+    ) -> WidgetDataModel:
         out = ip.asarray(model.value).gaussian_filter(sigma=sigma, dims=dimension)
         return model.with_value(out)
 
@@ -33,16 +32,15 @@ def gaussian_filter(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArr
     title="Median Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    preview=True,
 )
-def median_filter(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
-    @configure_gui(dimension={"choices": make_dims_annotation(model)})
+def median_filter(model: WidgetDataModel) -> Parametric:
+    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
     def run_median_filter(
         radius: Annotated[float, {"min": 0.0}] = 1.0,
         mode: PaddingMode = "reflect",
         cval: float = 0,
         dimension: int = 2,
-    ) -> WidgetDataModel[ip.ImgArray]:
+    ) -> WidgetDataModel:
         out = ip.asarray(model.value).median_filter(
             radius, mode=mode, cval=cval, dims=dimension
         )
@@ -55,16 +53,15 @@ def median_filter(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray
     title="Mean Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    preview=True,
 )
-def mean_filter(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
-    @configure_gui(dimension={"choices": make_dims_annotation(model)})
+def mean_filter(model: WidgetDataModel) -> Parametric:
+    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
     def run_mean_filter(
         radius: Annotated[float, {"min": 0.0}],
         mode: PaddingMode = "reflect",
         cval: float = 0,
         dimension: int = 2,
-    ) -> WidgetDataModel[ip.ImgArray]:
+    ) -> WidgetDataModel:
         out = ip.asarray(model.value).mean_filter(
             radius, mode=mode, cval=cval, dims=dimension
         )
@@ -74,40 +71,63 @@ def mean_filter(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
 
 
 @register_function(
-    title="Top-hat Filter ...",
+    title="STD Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    preview=True,
 )
-def tophat(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
-    @configure_gui(dimension={"choices": make_dims_annotation(model)})
-    def run_tophat(
-        radius: Annotated[float, {"min": 0.0}] = 30.0,
+def std_filter(model: WidgetDataModel) -> Parametric:
+    """Standard deviation filter."""
+
+    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
+    def run_std_filter(
+        radius: Annotated[float, {"min": 0.0}],
         mode: PaddingMode = "reflect",
         cval: float = 0,
         dimension: int = 2,
-    ) -> WidgetDataModel[ip.ImgArray]:
-        out = ip.asarray(model.value).tophat(
+    ) -> WidgetDataModel:
+        out = ip.asarray(model.value).std_filter(
             radius, mode=mode, cval=cval, dims=dimension
         )
         return model.with_value(out)
 
-    return run_tophat
+    return run_std_filter
+
+
+@register_function(
+    title="Coef Filter ...",
+    menus=MENUS,
+    types=[StandardType.IMAGE],
+)
+def coef_filter(model: WidgetDataModel) -> Parametric:
+    """Coefficient of variation filter."""
+
+    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
+    def run_coef_filter(
+        radius: Annotated[float, {"min": 0.0}],
+        mode: PaddingMode = "reflect",
+        cval: float = 0,
+        dimension: int = 2,
+    ) -> WidgetDataModel:
+        out = ip.asarray(model.value).coef_filter(
+            radius, mode=mode, cval=cval, dims=dimension
+        )
+        return model.with_value(out)
+
+    return run_coef_filter
 
 
 @register_function(
     title="Difference of Gaussian (DoG) Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    preview=True,
 )
-def dog_filter(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
-    @configure_gui(dimension={"choices": make_dims_annotation(model)})
+def dog_filter(model: WidgetDataModel) -> Parametric:
+    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
     def run_dog_filter(
         sigma_low: Annotated[float, {"min": 0.0}] = 1.0,
         sigma_high: Annotated[float, {"min": 0.0}] = 1.6,
         dimension: int = 2,
-    ) -> WidgetDataModel[ip.ImgArray]:
+    ) -> WidgetDataModel:
         out = ip.asarray(model.value).dog_filter(sigma_low, sigma_high, dims=dimension)
         return model.with_value(out)
 
@@ -118,14 +138,13 @@ def dog_filter(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
     title="Laplacian Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    preview=True,
 )
-def laplacian_filter(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
-    @configure_gui(dimension={"choices": make_dims_annotation(model)})
+def laplacian_filter(model: WidgetDataModel) -> Parametric:
+    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
     def run_laplacian_filter(
         radius: Annotated[int, {"min": 1}] = 1,
         dimension: int = 2,
-    ) -> WidgetDataModel[ip.ImgArray]:
+    ) -> WidgetDataModel:
         out = ip.asarray(model.value).laplacian_filter(radius=radius, dims=dimension)
         return model.with_value(out)
 
@@ -136,14 +155,13 @@ def laplacian_filter(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgAr
     title="Laplacian of Gaussian (LoG) Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    preview=True,
 )
-def log_filter(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
-    @configure_gui(dimension={"choices": make_dims_annotation(model)})
+def log_filter(model: WidgetDataModel) -> Parametric:
+    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
     def run_log_filter(
         sigma: Annotated[float, {"min": 0.0}] = 1.0,
         dimension: int = 2,
-    ) -> WidgetDataModel[ip.ImgArray]:
+    ) -> WidgetDataModel:
         out = ip.asarray(model.value).log_filter(sigma, dims=dimension)
         return model.with_value(out)
 
@@ -151,103 +169,14 @@ def log_filter(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
 
 
 @register_function(
-    title="Dilation ...",
-    menus=MENUS,
-    types=[StandardType.IMAGE],
-    preview=True,
-)
-def dilation(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
-    @configure_gui(dimension={"choices": make_dims_annotation(model)})
-    def run_dilation(
-        radius: Annotated[float, {"min": 0.0}] = 1.0,
-        mode: PaddingMode = "reflect",
-        cval: float = 0,
-        dimension: int = 2,
-    ) -> WidgetDataModel[ip.ImgArray]:
-        out = ip.asarray(model.value).dilation(
-            radius, mode=mode, cval=cval, dims=dimension
-        )
-        return model.with_value(out)
-
-    return run_dilation
-
-
-@register_function(
-    title="Erosion ...",
-    menus=MENUS,
-    types=[StandardType.IMAGE],
-    preview=True,
-)
-def erosion(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
-    @configure_gui(dimension={"choices": make_dims_annotation(model)})
-    def run_erosion(
-        radius: Annotated[float, {"min": 0.0}] = 1.0,
-        mode: PaddingMode = "reflect",
-        cval: float = 0,
-        dimension: int = 2,
-    ) -> WidgetDataModel[ip.ImgArray]:
-        out = ip.asarray(model.value).erosion(
-            radius, mode=mode, cval=cval, dims=dimension
-        )
-        return model.with_value(out)
-
-    return run_erosion
-
-
-@register_function(
-    title="Opening ...",
-    menus=MENUS,
-    types=[StandardType.IMAGE],
-    preview=True,
-)
-def opening(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
-    @configure_gui(dimension={"choices": make_dims_annotation(model)})
-    def run_opening(
-        radius: Annotated[float, {"min": 0.0}] = 1.0,
-        mode: PaddingMode = "reflect",
-        cval: float = 0,
-        dimension: int = 2,
-    ) -> WidgetDataModel[ip.ImgArray]:
-        out = ip.asarray(model.value).opening(
-            radius, mode=mode, cval=cval, dims=dimension
-        )
-        return model.with_value(out)
-
-    return run_opening
-
-
-@register_function(
-    title="Closing ...",
-    menus=MENUS,
-    types=[StandardType.IMAGE],
-    preview=True,
-)
-def closing(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
-    @configure_gui(dimension={"choices": make_dims_annotation(model)})
-    def run_closing(
-        radius: Annotated[float, {"min": 0.0}] = 1.0,
-        mode: PaddingMode = "reflect",
-        cval: float = 0,
-        dimension: int = 2,
-    ) -> WidgetDataModel[ip.ImgArray]:
-        out = ip.asarray(model.value).closing(
-            radius, mode=mode, cval=cval, dims=dimension
-        )
-        return model.with_value(out)
-
-    return run_closing
-
-
-@register_function(
     title="Threshold ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    preview=True,
 )
-def threshold(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
+def threshold(model: WidgetDataModel) -> Parametric:
     from skimage.filters import threshold_yen
 
-    img = model.value
+    img = ip.asarray(model.value)
     if img.dtype.kind == "f":
         wdgt = "FloatSlider"
     elif img.dtype.kind in "ui":
@@ -267,11 +196,11 @@ def threshold(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
         "widget_type": wdgt,
     }
 
-    @configure_gui(threshold=thresh_options)
+    @configure_gui(threshold=thresh_options, preview=True)
     def run_threshold(
         threshold,
         dark_background: bool = True,
-    ) -> WidgetDataModel[ip.ImgArray]:
+    ) -> WidgetDataModel:
         out = ip.asarray(model.value).threshold(threshold)
         if not dark_background:
             out = ~out
@@ -284,15 +213,42 @@ def threshold(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
     title="Edge Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    preview=True,
 )
-def edge_filter(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
-    @configure_gui(dimension={"choices": make_dims_annotation(model)})
+def edge_filter(model: WidgetDataModel) -> Parametric:
+    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
     def run_edge_filter(
         method: Literal["sobel", "prewitt", "scharr", "farid"],
         dimension: int = 2,
-    ) -> WidgetDataModel[ip.ImgArray]:
+    ) -> WidgetDataModel:
         out = ip.asarray(model.value).edge_filter(method, dims=dimension)
         return model.with_value(out)
 
     return run_edge_filter
+
+
+@register_function(
+    title="Smooth mask ...",
+    menus=MENUS,
+    types=[StandardType.IMAGE_BINARY],
+)
+def smooth_mask(model: WidgetDataModel) -> Parametric:
+    @configure_gui(
+        title="Smooth mask",
+        dimension={"choices": make_dims_annotation(model)},
+        preview=True,
+    )
+    def run_smooth_mask(
+        sigma: Annotated[float, {"min": 0.0}] = 1.0,
+        dilate_radius: Annotated[float, {"min": 0.0}] = 1.0,
+        dark_background: bool = True,
+        dimension: int = 2,
+    ) -> WidgetDataModel:
+        out = ip.asarray(model.value).smooth_mask(
+            sigma=sigma,
+            dilate_radius=dilate_radius,
+            mask_light=not dark_background,
+            dims=dimension,
+        )
+        return model.with_value(out)
+
+    return run_smooth_mask

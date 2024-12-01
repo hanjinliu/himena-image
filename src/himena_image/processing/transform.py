@@ -3,7 +3,7 @@ import impy as ip
 
 from himena import WidgetDataModel, Parametric
 from himena.consts import StandardType
-from himena.plugins import register_function
+from himena.plugins import register_function, configure_gui
 from himena_image.consts import PaddingMode
 
 MENUS = ["image/transform", "/model_menu/transform"]
@@ -14,7 +14,8 @@ MENUS = ["image/transform", "/model_menu/transform"]
     menus=MENUS,
     types=[StandardType.IMAGE],
 )
-def shift(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
+def shift(model: WidgetDataModel[ip.ImgArray]) -> Parametric:
+    @configure_gui(title="Shift", preview=True)
     def run_shift(
         shift: tuple[float, float],
         mode: PaddingMode = "constant",
@@ -33,9 +34,9 @@ def shift(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
     title="Rotate ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    preview=True,
 )
-def rotate(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
+def rotate(model: WidgetDataModel[ip.ImgArray]) -> Parametric:
+    @configure_gui(title="Rotate", preview=True)
     def run_rotate(
         degree: Annotated[float, {"min": -90, "max": 90, "widget_type": "FloatSlider"}],
         mode: PaddingMode = "constant",
@@ -57,7 +58,8 @@ def rotate(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
     menus=MENUS,
     types=[StandardType.IMAGE],
 )
-def flip(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
+def flip(model: WidgetDataModel[ip.ImgArray]) -> Parametric:
+    @configure_gui(title="Flip", preview=True)
     def run_flip(
         axis: str,
     ) -> WidgetDataModel[ip.ImgArray]:
@@ -72,7 +74,8 @@ def flip(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
     menus=MENUS,
     types=[StandardType.IMAGE],
 )
-def zoom(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
+def zoom(model: WidgetDataModel[ip.ImgArray]) -> Parametric:
+    @configure_gui(preview=True)
     def run_zoom(
         factor: float,
         mode: PaddingMode = "constant",
@@ -97,7 +100,8 @@ def zoom(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
     menus=MENUS,
     types=[StandardType.IMAGE],
 )
-def bin(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
+def bin(model: WidgetDataModel[ip.ImgArray]) -> Parametric:
+    @configure_gui(preview=True, title="Bin")
     def run_bin(
         bin_size: Literal[2, 3, 4, 5, 6, 7, 8],
         method: str = "mean",

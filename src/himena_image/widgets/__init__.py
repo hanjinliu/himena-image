@@ -1,5 +1,5 @@
 from himena_image.widgets.viewer import HimenaImageViewer
-from himena.qt import register_widget
+from himena.plugins import register_widget_class
 from himena.consts import StandardType
 
-register_widget(StandardType.IMAGE, HimenaImageViewer)
+register_widget_class(StandardType.IMAGE, HimenaImageViewer)

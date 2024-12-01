@@ -16,7 +16,7 @@ configure_submenu("/model_menu/fft", title="Fourier transform")
     menus=MENUS,
     types=[StandardType.IMAGE],
 )
-def fft(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
+def fft(model: WidgetDataModel[ip.ImgArray]) -> Parametric:
     """Fast Fourier transformation of an image."""
 
     @configure_gui(dimension={"choices": make_dims_annotation(model)})
@@ -40,7 +40,7 @@ def fft(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
     menus=MENUS,
     types=[StandardType.IMAGE],
 )
-def ifft(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
+def ifft(model: WidgetDataModel[ip.ImgArray]) -> Parametric:
     @configure_gui(dimension={"choices": make_dims_annotation(model)})
     def run_ifft(
         return_real: bool = True,
@@ -63,10 +63,9 @@ def ifft(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
     title="Low-pass Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    preview=True,
 )
-def lowpass_filter(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
-    @configure_gui(dimension={"choices": make_dims_annotation(model)})
+def lowpass_filter(model: WidgetDataModel[ip.ImgArray]) -> Parametric:
+    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
     def run_lowpass_filter(
         cutoff: float = 0.2,
         order: int = 2,
@@ -84,10 +83,9 @@ def lowpass_filter(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArra
     title="High-pass Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    preview=True,
 )
-def highpass_filter(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
-    @configure_gui(dimension={"choices": make_dims_annotation(model)})
+def highpass_filter(model: WidgetDataModel[ip.ImgArray]) -> Parametric:
+    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
     def run_highpass_filter(
         cutoff: float = 0.2,
         order: int = 2,
@@ -105,10 +103,9 @@ def highpass_filter(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArr
     title="Band-pass Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    preview=True,
 )
-def bandpass_filter(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.ImgArray]:
-    @configure_gui(dimension={"choices": make_dims_annotation(model)})
+def bandpass_filter(model: WidgetDataModel[ip.ImgArray]) -> Parametric:
+    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
     def run_bandpass_filter(
         low_cutoff: float = 0.2,
         high_cutoff: float = 0.5,

@@ -13,7 +13,7 @@ MENUS = ["image/features", "/model_menu/features"]
     menus=MENUS,
     types=[StandardType.IMAGE_BINARY],
 )
-def label(model: WidgetDataModel[ip.ImgArray]) -> Parametric[ip.Label]:
+def label(model: WidgetDataModel[ip.ImgArray]) -> Parametric:
     @configure_gui(
         connectivity={"choices": [1, 2, 3]},
         dimension={"choices": make_dims_annotation(model)},
@@ -78,7 +78,7 @@ def peak_local_max(model: WidgetDataModel[ip.ImgArray]) -> Parametric:
 @register_function(
     title="Region Properties ...",
     menus=MENUS,
-    types=[StandardType.IMAGE_LABELS],
+    types=[StandardType.IMAGE],
 )
 def region_properties(model: WidgetDataModel[ip.ImgArray]) -> Parametric:
     @configure_gui(
