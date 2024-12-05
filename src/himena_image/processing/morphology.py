@@ -1,11 +1,10 @@
 from typing import Annotated
-import impy as ip
 
 from himena import WidgetDataModel, Parametric
 from himena.consts import StandardType
 from himena.plugins import register_function, configure_gui
 from himena_image.consts import PaddingMode
-from himena_image.utils import make_dims_annotation
+from himena_image.utils import make_dims_annotation, image_to_model, model_to_image
 
 MENUS = ["image/morphology", "/model_menu/morphology"]
 
@@ -22,11 +21,11 @@ def dilation(model: WidgetDataModel) -> Parametric:
         mode: PaddingMode = "reflect",
         cval: float = 0,
         dimension: int = 2,
+        is_previewing: bool = False,
     ) -> WidgetDataModel:
-        out = ip.asarray(model.value).dilation(
-            radius, mode=mode, cval=cval, dims=dimension
-        )
-        return model.with_value(out)
+        img = model_to_image(model, is_previewing)
+        out = img.dilation(radius, mode=mode, cval=cval, dims=dimension)
+        return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_dilation
 
@@ -43,11 +42,11 @@ def erosion(model: WidgetDataModel) -> Parametric:
         mode: PaddingMode = "reflect",
         cval: float = 0,
         dimension: int = 2,
+        is_previewing: bool = False,
     ) -> WidgetDataModel:
-        out = ip.asarray(model.value).erosion(
-            radius, mode=mode, cval=cval, dims=dimension
-        )
-        return model.with_value(out)
+        img = model_to_image(model, is_previewing)
+        out = img.erosion(radius, mode=mode, cval=cval, dims=dimension)
+        return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_erosion
 
@@ -64,11 +63,11 @@ def opening(model: WidgetDataModel) -> Parametric:
         mode: PaddingMode = "reflect",
         cval: float = 0,
         dimension: int = 2,
+        is_previewing: bool = False,
     ) -> WidgetDataModel:
-        out = ip.asarray(model.value).opening(
-            radius, mode=mode, cval=cval, dims=dimension
-        )
-        return model.with_value(out)
+        img = model_to_image(model, is_previewing)
+        out = img.opening(radius, mode=mode, cval=cval, dims=dimension)
+        return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_opening
 
@@ -85,11 +84,11 @@ def closing(model: WidgetDataModel) -> Parametric:
         mode: PaddingMode = "reflect",
         cval: float = 0,
         dimension: int = 2,
+        is_previewing: bool = False,
     ) -> WidgetDataModel:
-        out = ip.asarray(model.value).closing(
-            radius, mode=mode, cval=cval, dims=dimension
-        )
-        return model.with_value(out)
+        img = model_to_image(model, is_previewing)
+        out = img.closing(radius, mode=mode, cval=cval, dims=dimension)
+        return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_closing
 
@@ -106,10 +105,10 @@ def tophat(model: WidgetDataModel) -> Parametric:
         mode: PaddingMode = "reflect",
         cval: float = 0,
         dimension: int = 2,
+        is_previewing: bool = False,
     ) -> WidgetDataModel:
-        out = ip.asarray(model.value).tophat(
-            radius, mode=mode, cval=cval, dims=dimension
-        )
-        return model.with_value(out)
+        img = model_to_image(model, is_previewing)
+        out = img.tophat(radius, mode=mode, cval=cval, dims=dimension)
+        return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_tophat

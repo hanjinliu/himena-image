@@ -4,9 +4,9 @@ import impy as ip
 from himena import WidgetDataModel, Parametric
 from himena.consts import StandardType
 from himena.plugins import register_function, configure_gui
-from himena.model_meta import ImageMeta
+from himena.standards.model_meta import ImageMeta
 from himena_image.consts import PaddingMode
-from himena_image.utils import make_dims_annotation
+from himena_image.utils import make_dims_annotation, model_to_image, image_to_model
 
 MENUS = ["image/filter", "/model_menu/filter"]
 
@@ -21,9 +21,11 @@ def gaussian_filter(model: WidgetDataModel) -> Parametric:
     def run_gaussian_filter(
         sigma: Annotated[float, {"min": 0.0}] = 1.0,
         dimension: int = 2,
+        is_previewing: bool = False,
     ) -> WidgetDataModel:
-        out = ip.asarray(model.value).gaussian_filter(sigma=sigma, dims=dimension)
-        return model.with_value(out)
+        img = model_to_image(model, is_previewing)
+        out = img.gaussian_filter(sigma=sigma, dims=dimension)
+        return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_gaussian_filter
 
@@ -40,11 +42,11 @@ def median_filter(model: WidgetDataModel) -> Parametric:
         mode: PaddingMode = "reflect",
         cval: float = 0,
         dimension: int = 2,
+        is_previewing: bool = False,
     ) -> WidgetDataModel:
-        out = ip.asarray(model.value).median_filter(
-            radius, mode=mode, cval=cval, dims=dimension
-        )
-        return model.with_value(out)
+        img = model_to_image(model, is_previewing)
+        out = img.median_filter(radius, mode=mode, cval=cval, dims=dimension)
+        return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_median_filter
 
@@ -61,11 +63,11 @@ def mean_filter(model: WidgetDataModel) -> Parametric:
         mode: PaddingMode = "reflect",
         cval: float = 0,
         dimension: int = 2,
+        is_previewing: bool = False,
     ) -> WidgetDataModel:
-        out = ip.asarray(model.value).mean_filter(
-            radius, mode=mode, cval=cval, dims=dimension
-        )
-        return model.with_value(out)
+        img = model_to_image(model, is_previewing)
+        out = img.mean_filter(radius, mode=mode, cval=cval, dims=dimension)
+        return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_mean_filter
 
@@ -84,11 +86,11 @@ def std_filter(model: WidgetDataModel) -> Parametric:
         mode: PaddingMode = "reflect",
         cval: float = 0,
         dimension: int = 2,
+        is_previewing: bool = False,
     ) -> WidgetDataModel:
-        out = ip.asarray(model.value).std_filter(
-            radius, mode=mode, cval=cval, dims=dimension
-        )
-        return model.with_value(out)
+        img = model_to_image(model, is_previewing)
+        out = img.std_filter(radius, mode=mode, cval=cval, dims=dimension)
+        return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_std_filter
 
@@ -107,11 +109,11 @@ def coef_filter(model: WidgetDataModel) -> Parametric:
         mode: PaddingMode = "reflect",
         cval: float = 0,
         dimension: int = 2,
+        is_previewing: bool = False,
     ) -> WidgetDataModel:
-        out = ip.asarray(model.value).coef_filter(
-            radius, mode=mode, cval=cval, dims=dimension
-        )
-        return model.with_value(out)
+        img = model_to_image(model, is_previewing)
+        out = img.coef_filter(radius, mode=mode, cval=cval, dims=dimension)
+        return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_coef_filter
 
@@ -127,9 +129,11 @@ def dog_filter(model: WidgetDataModel) -> Parametric:
         sigma_low: Annotated[float, {"min": 0.0}] = 1.0,
         sigma_high: Annotated[float, {"min": 0.0}] = 1.6,
         dimension: int = 2,
+        is_previewing: bool = False,
     ) -> WidgetDataModel:
-        out = ip.asarray(model.value).dog_filter(sigma_low, sigma_high, dims=dimension)
-        return model.with_value(out)
+        img = model_to_image(model, is_previewing)
+        out = img.dog_filter(sigma_low, sigma_high, dims=dimension)
+        return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_dog_filter
 
@@ -144,11 +148,32 @@ def laplacian_filter(model: WidgetDataModel) -> Parametric:
     def run_laplacian_filter(
         radius: Annotated[int, {"min": 1}] = 1,
         dimension: int = 2,
+        is_previewing: bool = False,
     ) -> WidgetDataModel:
-        out = ip.asarray(model.value).laplacian_filter(radius=radius, dims=dimension)
-        return model.with_value(out)
+        img = model_to_image(model, is_previewing)
+        out = img.laplacian_filter(radius=radius, dims=dimension)
+        return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_laplacian_filter
+
+
+@register_function(
+    title="Difference of Hessian (DoH) Filter ...",
+    menus=MENUS,
+    types=[StandardType.IMAGE],
+)
+def doh_filter(model: WidgetDataModel) -> Parametric:
+    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
+    def run_doh_filter(
+        sigma: Annotated[float, {"min": 0.0}] = 1.0,
+        dimension: int = 2,
+        is_previewing: bool = False,
+    ) -> WidgetDataModel:
+        img = model_to_image(model, is_previewing)
+        out = img.doh_filter(sigma, dims=dimension)
+        return image_to_model(out, orig=model, is_previewing=is_previewing)
+
+    return run_doh_filter
 
 
 @register_function(
@@ -161,9 +186,11 @@ def log_filter(model: WidgetDataModel) -> Parametric:
     def run_log_filter(
         sigma: Annotated[float, {"min": 0.0}] = 1.0,
         dimension: int = 2,
+        is_previewing: bool = False,
     ) -> WidgetDataModel:
-        out = ip.asarray(model.value).log_filter(sigma, dims=dimension)
-        return model.with_value(out)
+        img = model_to_image(model, is_previewing)
+        out = img.log_filter(sigma, dims=dimension)
+        return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_log_filter
 
@@ -200,11 +227,15 @@ def threshold(model: WidgetDataModel) -> Parametric:
     def run_threshold(
         threshold,
         dark_background: bool = True,
+        is_previewing: bool = False,
     ) -> WidgetDataModel:
-        out = ip.asarray(model.value).threshold(threshold)
+        img = model_to_image(model, is_previewing)
+        out = img.threshold(threshold)
         if not dark_background:
             out = ~out
-        return model.with_value(out, type=StandardType.IMAGE_BINARY)
+        model_out = image_to_model(out, orig=model, is_previewing=is_previewing)
+        model_out.type = StandardType.IMAGE_BINARY
+        return model_out
 
     return run_threshold
 
@@ -219,9 +250,11 @@ def edge_filter(model: WidgetDataModel) -> Parametric:
     def run_edge_filter(
         method: Literal["sobel", "prewitt", "scharr", "farid"],
         dimension: int = 2,
+        is_previewing: bool = False,
     ) -> WidgetDataModel:
-        out = ip.asarray(model.value).edge_filter(method, dims=dimension)
-        return model.with_value(out)
+        img = model_to_image(model, is_previewing)
+        out = img.edge_filter(method, dims=dimension)
+        return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_edge_filter
 
@@ -249,6 +282,6 @@ def smooth_mask(model: WidgetDataModel) -> Parametric:
             mask_light=not dark_background,
             dims=dimension,
         )
-        return model.with_value(out)
+        return image_to_model(out, orig=model)
 
     return run_smooth_mask

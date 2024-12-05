@@ -4,6 +4,9 @@ import impy as ip
 from himena import WidgetDataModel, Parametric, AppContext
 from himena.plugins import register_function, configure_gui
 from himena.consts import StandardType
+from himena.standards.model_meta import ImageMeta
+from himena.standards import roi
+import numpy as np
 from himena_image.utils import image_to_model
 
 MENU = "image/calculate"
@@ -107,3 +110,29 @@ def invert(model: WidgetDataModel[ip.ImgArray]) -> WidgetDataModel[ip.ImgArray]:
     """Invert the image."""
     out = -model.value
     return model.with_value(out)
+
+
+@register_function(
+    title="Profile line",
+    menus=MENU,
+    types=[StandardType.IMAGE],
+)
+def profile_line(model: WidgetDataModel[ip.ImgArray]) -> Parametric:
+    """Profile line."""
+    img = ip.asarray(model.value)
+    if not isinstance(meta := model.metadata, ImageMeta):
+        raise ValueError("Metadata is missing.")
+    img_slice = img[meta.current_indices]
+    if isinstance(r := meta.current_roi, roi.LineRoi):
+        points = [[r.y1, r.x1], [r.y2, r.x2]]
+    elif isinstance(r := meta.current_roi, roi.SegmentedLineRoi):
+        points = np.stack([r.ys, r.xs], axis=-1)
+    else:
+        raise TypeError(f"Cannot get profile line from {type(r)}.")
+    sliced = img_slice.reslice(points)
+    # TODO: convert x, y to dataframe
+    return WidgetDataModel(
+        value=sliced,
+        type=StandardType.DATAFRAME,
+        title=model.title,
+    )

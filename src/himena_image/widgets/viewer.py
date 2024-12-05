@@ -13,7 +13,7 @@ from ndv import NDViewer, DataWrapper
 from superqt import QEnumComboBox
 from himena.consts import StandardType
 from himena.types import WidgetDataModel
-from himena.model_meta import ImageMeta
+from himena.standards.model_meta import ImageMeta
 from himena.plugins import protocol_override
 
 if TYPE_CHECKING:

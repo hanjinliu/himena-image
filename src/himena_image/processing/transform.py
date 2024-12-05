@@ -1,10 +1,10 @@
 from typing import Annotated, Literal
-import impy as ip
 
 from himena import WidgetDataModel, Parametric
 from himena.consts import StandardType
 from himena.plugins import register_function, configure_gui
 from himena_image.consts import PaddingMode
+from himena_image.utils import make_dims_annotation, image_to_model, model_to_image
 
 MENUS = ["image/transform", "/model_menu/transform"]
 
@@ -14,18 +14,20 @@ MENUS = ["image/transform", "/model_menu/transform"]
     menus=MENUS,
     types=[StandardType.IMAGE],
 )
-def shift(model: WidgetDataModel[ip.ImgArray]) -> Parametric:
-    @configure_gui(title="Shift", preview=True)
+def shift(model: WidgetDataModel) -> Parametric:
+    @configure_gui(preview=True, dimension={"choices": make_dims_annotation(model)})
     def run_shift(
         shift: tuple[float, float],
         mode: PaddingMode = "constant",
         value: float = 0.0,
         dimension: int = 2,
-    ) -> WidgetDataModel[ip.ImgArray]:
+        is_previewing: bool = False,
+    ) -> WidgetDataModel:
         if len(shift) != dimension:
             raise ValueError("The length of shift must be equal to the dimension.")
-        out = model.value.shift(shift, mode=mode, value=value, dims=dimension)
-        return model.with_value(out)
+        img = model_to_image(model, is_previewing)
+        out = img.shift(shift, mode=mode, value=value, dims=dimension)
+        return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_shift
 
@@ -35,20 +37,20 @@ def shift(model: WidgetDataModel[ip.ImgArray]) -> Parametric:
     menus=MENUS,
     types=[StandardType.IMAGE],
 )
-def rotate(model: WidgetDataModel[ip.ImgArray]) -> Parametric:
-    @configure_gui(title="Rotate", preview=True)
+def rotate(model: WidgetDataModel) -> Parametric:
+    @configure_gui(preview=True, dimension={"choices": make_dims_annotation(model)})
     def run_rotate(
         degree: Annotated[float, {"min": -90, "max": 90, "widget_type": "FloatSlider"}],
         mode: PaddingMode = "constant",
         cval: float = 0.0,
         dimension: int = 2,
-    ) -> WidgetDataModel[ip.ImgArray]:
+        is_previewing: bool = False,
+    ) -> WidgetDataModel:
         if abs(degree) < 1e-4:
             return model
-        out = ip.asarray(model.value).rotate(
-            degree, mode=mode, cval=cval, dims=dimension
-        )
-        return model.with_value(out)
+        img = model_to_image(model, is_previewing)
+        out = img.rotate(degree, mode=mode, cval=cval, dims=dimension)
+        return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_rotate
 
@@ -58,13 +60,18 @@ def rotate(model: WidgetDataModel[ip.ImgArray]) -> Parametric:
     menus=MENUS,
     types=[StandardType.IMAGE],
 )
-def flip(model: WidgetDataModel[ip.ImgArray]) -> Parametric:
-    @configure_gui(title="Flip", preview=True)
+def flip(model: WidgetDataModel) -> Parametric:
+    @configure_gui(preview=True, dimension={"choices": make_dims_annotation(model)})
     def run_flip(
         axis: str,
-    ) -> WidgetDataModel[ip.ImgArray]:
-        out = ip.asarray(model.value).isel({axis: slice(None, None, -1)})
-        return model.with_value(out)
+        is_previewing: bool = False,
+    ) -> WidgetDataModel:
+        img = model_to_image(model, is_previewing)
+        idx = img.axes.index(axis)
+        slices = [slice(None)] * img.ndim
+        slices[idx] = slice(None, None, -1)
+        out = img[tuple(slices)]
+        return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_flip
 
@@ -74,23 +81,25 @@ def flip(model: WidgetDataModel[ip.ImgArray]) -> Parametric:
     menus=MENUS,
     types=[StandardType.IMAGE],
 )
-def zoom(model: WidgetDataModel[ip.ImgArray]) -> Parametric:
-    @configure_gui(preview=True)
+def zoom(model: WidgetDataModel) -> Parametric:
+    @configure_gui(preview=True, dimension={"choices": make_dims_annotation(model)})
     def run_zoom(
         factor: float,
         mode: PaddingMode = "constant",
         cval: float = 0.0,
         same_shape: bool = False,
         dimension: int = 2,
-    ) -> WidgetDataModel[ip.ImgArray]:
-        out = ip.asarray(model.value).zoom(
+        is_previewing: bool = False,
+    ) -> WidgetDataModel:
+        img = model_to_image(model, is_previewing)
+        out = img.zoom(
             factor,
             mode=mode,
             cval=cval,
             same_shape=same_shape,
             dims=dimension,
         )
-        return model.with_value(out)
+        return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_zoom
 
@@ -100,16 +109,16 @@ def zoom(model: WidgetDataModel[ip.ImgArray]) -> Parametric:
     menus=MENUS,
     types=[StandardType.IMAGE],
 )
-def bin(model: WidgetDataModel[ip.ImgArray]) -> Parametric:
-    @configure_gui(preview=True, title="Bin")
+def bin(model: WidgetDataModel) -> Parametric:
+    @configure_gui(preview=True, dimension={"choices": make_dims_annotation(model)})
     def run_bin(
         bin_size: Literal[2, 3, 4, 5, 6, 7, 8],
         method: str = "mean",
         dimension: int = 2,
-    ) -> WidgetDataModel[ip.ImgArray]:
-        out = ip.asarray(model.value).binning(
-            bin_size, method=method, check_edges=False, dims=dimension
-        )
-        return model.with_value(out)
+        is_previewing: bool = False,
+    ) -> WidgetDataModel:
+        img = model_to_image(model, is_previewing)
+        out = img.binning(bin_size, method=method, check_edges=False, dims=dimension)
+        return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_bin
