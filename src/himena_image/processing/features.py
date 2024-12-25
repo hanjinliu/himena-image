@@ -17,6 +17,7 @@ def label(model: WidgetDataModel[ip.ImgArray]) -> Parametric:
     @configure_gui(
         connectivity={"choices": [1, 2, 3]},
         dimension={"choices": make_dims_annotation(model)},
+        run_async=True,
     )
     def run_label(
         connectivity: int = 1,
@@ -39,6 +40,7 @@ def peak_local_max(model: WidgetDataModel[ip.ImgArray]) -> Parametric:
     @configure_gui(
         labels={"types": [StandardType.IMAGE_LABELS]},
         dimension={"choices": make_dims_annotation(model)},
+        run_async=True,
     )
     def run_peak_local_max(
         min_distance: float = 1.0,
@@ -83,6 +85,7 @@ def peak_local_max(model: WidgetDataModel[ip.ImgArray]) -> Parametric:
 def region_properties(model: WidgetDataModel[ip.ImgArray]) -> Parametric:
     @configure_gui(
         labels={"types": [StandardType.IMAGE_LABELS]},
+        run_async=True,
     )
     def run_region_properties(
         labels: WidgetDataModel[ip.Label],

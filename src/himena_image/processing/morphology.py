@@ -15,7 +15,9 @@ MENUS = ["image/morphology", "/model_menu/morphology"]
     types=[StandardType.IMAGE],
 )
 def dilation(model: WidgetDataModel) -> Parametric:
-    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
+    @configure_gui(
+        dimension={"choices": make_dims_annotation(model)}, preview=True, run_async=True
+    )
     def run_dilation(
         radius: Annotated[float, {"min": 0.0}] = 1.0,
         mode: PaddingMode = "reflect",
@@ -36,7 +38,9 @@ def dilation(model: WidgetDataModel) -> Parametric:
     types=[StandardType.IMAGE],
 )
 def erosion(model: WidgetDataModel) -> Parametric:
-    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
+    @configure_gui(
+        dimension={"choices": make_dims_annotation(model)}, preview=True, run_async=True
+    )
     def run_erosion(
         radius: Annotated[float, {"min": 0.0}] = 1.0,
         mode: PaddingMode = "reflect",
@@ -57,7 +61,9 @@ def erosion(model: WidgetDataModel) -> Parametric:
     types=[StandardType.IMAGE],
 )
 def opening(model: WidgetDataModel) -> Parametric:
-    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
+    @configure_gui(
+        dimension={"choices": make_dims_annotation(model)}, preview=True, run_async=True
+    )
     def run_opening(
         radius: Annotated[float, {"min": 0.0}] = 1.0,
         mode: PaddingMode = "reflect",
@@ -78,7 +84,9 @@ def opening(model: WidgetDataModel) -> Parametric:
     types=[StandardType.IMAGE],
 )
 def closing(model: WidgetDataModel) -> Parametric:
-    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
+    @configure_gui(
+        dimension={"choices": make_dims_annotation(model)}, preview=True, run_async=True
+    )
     def run_closing(
         radius: Annotated[float, {"min": 0.0}] = 1.0,
         mode: PaddingMode = "reflect",
@@ -99,7 +107,9 @@ def closing(model: WidgetDataModel) -> Parametric:
     types=[StandardType.IMAGE],
 )
 def tophat(model: WidgetDataModel) -> Parametric:
-    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
+    @configure_gui(
+        dimension={"choices": make_dims_annotation(model)}, preview=True, run_async=True
+    )
     def run_tophat(
         radius: Annotated[float, {"min": 0.0}] = 30.0,
         mode: PaddingMode = "reflect",

@@ -17,7 +17,9 @@ configure_submenu("/model_menu/fft", title="Fourier transform")
 def fft(model: WidgetDataModel) -> Parametric:
     """Fast Fourier transformation of an image."""
 
-    @configure_gui(dimension={"choices": make_dims_annotation(model)})
+    @configure_gui(
+        dimension={"choices": make_dims_annotation(model)}, preview=True, run_async=True
+    )
     def run_fft(
         origin_in_center: bool = True,
         double_precision: bool = False,
@@ -41,7 +43,11 @@ def fft(model: WidgetDataModel) -> Parametric:
     types=[StandardType.IMAGE],
 )
 def ifft(model: WidgetDataModel) -> Parametric:
-    @configure_gui(dimension={"choices": make_dims_annotation(model)})
+    @configure_gui(
+        dimension={"choices": make_dims_annotation(model)},
+        preview=True,
+        run_async=True,
+    )
     def run_ifft(
         return_real: bool = True,
         origin_in_center: bool = True,
@@ -67,7 +73,9 @@ def ifft(model: WidgetDataModel) -> Parametric:
     types=[StandardType.IMAGE],
 )
 def lowpass_filter(model: WidgetDataModel) -> Parametric:
-    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
+    @configure_gui(
+        dimension={"choices": make_dims_annotation(model)}, preview=True, run_async=True
+    )
     def run_lowpass_filter(
         cutoff: float = 0.2,
         order: int = 2,
@@ -88,7 +96,11 @@ def lowpass_filter(model: WidgetDataModel) -> Parametric:
     types=[StandardType.IMAGE],
 )
 def highpass_filter(model: WidgetDataModel) -> Parametric:
-    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
+    @configure_gui(
+        dimension={"choices": make_dims_annotation(model)},
+        preview=True,
+        run_async=True,
+    )
     def run_highpass_filter(
         cutoff: float = 0.2,
         order: int = 2,
@@ -109,7 +121,9 @@ def highpass_filter(model: WidgetDataModel) -> Parametric:
     types=[StandardType.IMAGE],
 )
 def bandpass_filter(model: WidgetDataModel) -> Parametric:
-    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
+    @configure_gui(
+        dimension={"choices": make_dims_annotation(model)}, preview=True, run_async=True
+    )
     def run_bandpass_filter(
         cuton: float = 0.2,
         cutoff: float = 0.5,

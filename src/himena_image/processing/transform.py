@@ -3,7 +3,7 @@ from typing import Annotated, Literal
 from himena import WidgetDataModel, Parametric
 from himena.consts import StandardType
 from himena.plugins import register_function, configure_gui
-from himena_image.consts import PaddingMode
+from himena_image.consts import PaddingMode, InterpolationOrder
 from himena_image.utils import make_dims_annotation, image_to_model, model_to_image
 
 MENUS = ["image/transform", "/model_menu/transform"]
@@ -15,7 +15,9 @@ MENUS = ["image/transform", "/model_menu/transform"]
     types=[StandardType.IMAGE],
 )
 def shift(model: WidgetDataModel) -> Parametric:
-    @configure_gui(preview=True, dimension={"choices": make_dims_annotation(model)})
+    @configure_gui(
+        preview=True, dimension={"choices": make_dims_annotation(model)}, run_async=True
+    )
     def run_shift(
         shift: tuple[float, float],
         mode: PaddingMode = "constant",
@@ -38,9 +40,12 @@ def shift(model: WidgetDataModel) -> Parametric:
     types=[StandardType.IMAGE],
 )
 def rotate(model: WidgetDataModel) -> Parametric:
-    @configure_gui(preview=True, dimension={"choices": make_dims_annotation(model)})
+    @configure_gui(
+        preview=True, dimension={"choices": make_dims_annotation(model)}, run_async=True
+    )
     def run_rotate(
         degree: Annotated[float, {"min": -90, "max": 90, "widget_type": "FloatSlider"}],
+        order: InterpolationOrder = 3,
         mode: PaddingMode = "constant",
         cval: float = 0.0,
         dimension: int = 2,
@@ -49,7 +54,7 @@ def rotate(model: WidgetDataModel) -> Parametric:
         if abs(degree) < 1e-4:
             return model
         img = model_to_image(model, is_previewing)
-        out = img.rotate(degree, mode=mode, cval=cval, dims=dimension)
+        out = img.rotate(degree, mode=mode, cval=cval, order=order, dims=dimension)
         return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_rotate
@@ -61,7 +66,9 @@ def rotate(model: WidgetDataModel) -> Parametric:
     types=[StandardType.IMAGE],
 )
 def flip(model: WidgetDataModel) -> Parametric:
-    @configure_gui(preview=True, dimension={"choices": make_dims_annotation(model)})
+    @configure_gui(
+        preview=True, dimension={"choices": make_dims_annotation(model)}, run_async=True
+    )
     def run_flip(
         axis: str,
         is_previewing: bool = False,
@@ -82,9 +89,12 @@ def flip(model: WidgetDataModel) -> Parametric:
     types=[StandardType.IMAGE],
 )
 def zoom(model: WidgetDataModel) -> Parametric:
-    @configure_gui(preview=True, dimension={"choices": make_dims_annotation(model)})
+    @configure_gui(
+        preview=True, dimension={"choices": make_dims_annotation(model)}, run_async=True
+    )
     def run_zoom(
         factor: float,
+        order: InterpolationOrder = 3,
         mode: PaddingMode = "constant",
         cval: float = 0.0,
         same_shape: bool = False,
@@ -94,6 +104,7 @@ def zoom(model: WidgetDataModel) -> Parametric:
         img = model_to_image(model, is_previewing)
         out = img.zoom(
             factor,
+            order=order,
             mode=mode,
             cval=cval,
             same_shape=same_shape,
@@ -110,7 +121,9 @@ def zoom(model: WidgetDataModel) -> Parametric:
     types=[StandardType.IMAGE],
 )
 def bin(model: WidgetDataModel) -> Parametric:
-    @configure_gui(preview=True, dimension={"choices": make_dims_annotation(model)})
+    @configure_gui(
+        preview=True, dimension={"choices": make_dims_annotation(model)}, run_async=True
+    )
     def run_bin(
         bin_size: Literal[2, 3, 4, 5, 6, 7, 8],
         method: str = "mean",
@@ -122,3 +135,50 @@ def bin(model: WidgetDataModel) -> Parametric:
         return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_bin
+
+
+@register_function(
+    title="Drift correction ...",
+    menus=MENUS,
+    types=[StandardType.IMAGE],
+)
+def drift_correction(model: WidgetDataModel) -> Parametric:
+    """Correct drift in the image."""
+    img = model_to_image(model)
+    along_choices = [str(a) for a in img.axes]
+    if "t" in along_choices:
+        along_default = "t"
+    elif "z" in along_choices:
+        along_default = "z"
+    else:
+        along_default = along_choices[0]
+
+    @configure_gui(
+        along={"choices": along_choices, "value": along_default},
+        dimension={"choices": make_dims_annotation(model)},
+        run_async=True,
+    )
+    def run_drift_correction(
+        along: str,
+        reference: str = "",
+        zero_ave: bool = True,
+        max_shift: float | None = None,
+        order: InterpolationOrder = 1,
+        mode: PaddingMode = "constant",
+        cval: float = 0.0,
+        dimension: int = 2,
+    ) -> WidgetDataModel:
+        img = model_to_image(model)
+        out = img.drift_correction(
+            ref=reference or None,
+            zero_ave=zero_ave,
+            along=along,
+            max_shift=max_shift,
+            mode=mode,
+            cval=cval,
+            order=order,
+            dims=dimension,
+        )
+        return image_to_model(out, orig=model)
+
+    return run_drift_correction

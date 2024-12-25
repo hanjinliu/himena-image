@@ -17,7 +17,11 @@ MENUS = ["image/filter", "/model_menu/filter"]
     types=[StandardType.IMAGE],
 )
 def gaussian_filter(model: WidgetDataModel) -> Parametric:
-    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
+    @configure_gui(
+        dimension={"choices": make_dims_annotation(model)},
+        preview=True,
+        run_async=True,
+    )
     def run_gaussian_filter(
         sigma: Annotated[float, {"min": 0.0}] = 1.0,
         dimension: int = 2,
@@ -36,7 +40,11 @@ def gaussian_filter(model: WidgetDataModel) -> Parametric:
     types=[StandardType.IMAGE],
 )
 def median_filter(model: WidgetDataModel) -> Parametric:
-    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
+    @configure_gui(
+        dimension={"choices": make_dims_annotation(model)},
+        preview=True,
+        run_async=True,
+    )
     def run_median_filter(
         radius: Annotated[float, {"min": 0.0}] = 1.0,
         mode: PaddingMode = "reflect",
@@ -57,7 +65,9 @@ def median_filter(model: WidgetDataModel) -> Parametric:
     types=[StandardType.IMAGE],
 )
 def mean_filter(model: WidgetDataModel) -> Parametric:
-    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
+    @configure_gui(
+        dimension={"choices": make_dims_annotation(model)}, preview=True, run_async=True
+    )
     def run_mean_filter(
         radius: Annotated[float, {"min": 0.0}],
         mode: PaddingMode = "reflect",
@@ -80,7 +90,9 @@ def mean_filter(model: WidgetDataModel) -> Parametric:
 def std_filter(model: WidgetDataModel) -> Parametric:
     """Standard deviation filter."""
 
-    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
+    @configure_gui(
+        dimension={"choices": make_dims_annotation(model)}, preview=True, run_async=True
+    )
     def run_std_filter(
         radius: Annotated[float, {"min": 0.0}],
         mode: PaddingMode = "reflect",
@@ -103,7 +115,9 @@ def std_filter(model: WidgetDataModel) -> Parametric:
 def coef_filter(model: WidgetDataModel) -> Parametric:
     """Coefficient of variation filter."""
 
-    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
+    @configure_gui(
+        dimension={"choices": make_dims_annotation(model)}, preview=True, run_async=True
+    )
     def run_coef_filter(
         radius: Annotated[float, {"min": 0.0}],
         mode: PaddingMode = "reflect",
@@ -124,7 +138,9 @@ def coef_filter(model: WidgetDataModel) -> Parametric:
     types=[StandardType.IMAGE],
 )
 def dog_filter(model: WidgetDataModel) -> Parametric:
-    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
+    @configure_gui(
+        dimension={"choices": make_dims_annotation(model)}, preview=True, run_async=True
+    )
     def run_dog_filter(
         sigma_low: Annotated[float, {"min": 0.0}] = 1.0,
         sigma_high: Annotated[float, {"min": 0.0}] = 1.6,
@@ -144,7 +160,9 @@ def dog_filter(model: WidgetDataModel) -> Parametric:
     types=[StandardType.IMAGE],
 )
 def laplacian_filter(model: WidgetDataModel) -> Parametric:
-    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
+    @configure_gui(
+        dimension={"choices": make_dims_annotation(model)}, preview=True, run_async=True
+    )
     def run_laplacian_filter(
         radius: Annotated[int, {"min": 1}] = 1,
         dimension: int = 2,
@@ -163,7 +181,9 @@ def laplacian_filter(model: WidgetDataModel) -> Parametric:
     types=[StandardType.IMAGE],
 )
 def doh_filter(model: WidgetDataModel) -> Parametric:
-    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
+    @configure_gui(
+        dimension={"choices": make_dims_annotation(model)}, preview=True, run_async=True
+    )
     def run_doh_filter(
         sigma: Annotated[float, {"min": 0.0}] = 1.0,
         dimension: int = 2,
@@ -182,7 +202,9 @@ def doh_filter(model: WidgetDataModel) -> Parametric:
     types=[StandardType.IMAGE],
 )
 def log_filter(model: WidgetDataModel) -> Parametric:
-    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
+    @configure_gui(
+        dimension={"choices": make_dims_annotation(model)}, preview=True, run_async=True
+    )
     def run_log_filter(
         sigma: Annotated[float, {"min": 0.0}] = 1.0,
         dimension: int = 2,
@@ -193,6 +215,28 @@ def log_filter(model: WidgetDataModel) -> Parametric:
         return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_log_filter
+
+
+@register_function(
+    title="Rolling ball ...",
+    menus=MENUS,
+    types=[StandardType.IMAGE],
+)
+def rolling_ball(model: WidgetDataModel) -> Parametric:
+    @configure_gui(
+        dimension={"choices": make_dims_annotation(model)},
+        run_async=True,
+    )
+    def run_rolling_ball(
+        radius: Annotated[float, {"min": 0.0}] = 30.0,
+        dimension: int = 2,
+        return_background: bool = False,
+    ) -> WidgetDataModel:
+        img = model_to_image(model)
+        out = img.rolling_ball(radius, return_bg=return_background, dims=dimension)
+        return image_to_model(out, orig=model)
+
+    return run_rolling_ball
 
 
 @register_function(
@@ -223,7 +267,7 @@ def threshold(model: WidgetDataModel) -> Parametric:
         "widget_type": wdgt,
     }
 
-    @configure_gui(threshold=thresh_options, preview=True)
+    @configure_gui(threshold=thresh_options, preview=True, run_async=True)
     def run_threshold(
         threshold,
         dark_background: bool = True,
@@ -246,7 +290,9 @@ def threshold(model: WidgetDataModel) -> Parametric:
     types=[StandardType.IMAGE],
 )
 def edge_filter(model: WidgetDataModel) -> Parametric:
-    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
+    @configure_gui(
+        dimension={"choices": make_dims_annotation(model)}, preview=True, run_async=True
+    )
     def run_edge_filter(
         method: Literal["sobel", "prewitt", "scharr", "farid"],
         dimension: int = 2,
@@ -269,6 +315,7 @@ def smooth_mask(model: WidgetDataModel) -> Parametric:
         title="Smooth mask",
         dimension={"choices": make_dims_annotation(model)},
         preview=True,
+        run_async=True,
     )
     def run_smooth_mask(
         sigma: Annotated[float, {"min": 0.0}] = 1.0,
@@ -276,7 +323,7 @@ def smooth_mask(model: WidgetDataModel) -> Parametric:
         dark_background: bool = True,
         dimension: int = 2,
     ) -> WidgetDataModel:
-        out = ip.asarray(model.value).smooth_mask(
+        out = model_to_image(model).smooth_mask(
             sigma=sigma,
             dilate_radius=dilate_radius,
             mask_light=not dark_background,

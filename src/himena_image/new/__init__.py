@@ -1,8 +1,11 @@
 from typing import Literal, NamedTuple
 from himena import WidgetDataModel, Parametric
-from himena.plugins import register_function
+from himena.plugins import register_function, configure_submenu, configure_gui
 from himena_image.utils import image_to_model
 import impy as ip
+
+MENU = "file/new/skimage samples"
+configure_submenu(MENU, title="scikit-image")
 
 
 class SampleImage(NamedTuple):
@@ -12,7 +15,6 @@ class SampleImage(NamedTuple):
     title: str | None = None
 
 
-MENU = "file/samples/skimage samples"
 SKIMAGE_SAMPLES = [
     SampleImage("astronaut", True, "yxc"),
     SampleImage("brain", False, "zyx"),
@@ -34,12 +36,12 @@ SKIMAGE_SAMPLES = [
     SampleImage("hubble_deep_field", True, "yxc"),
     SampleImage("human_mitosis", False),
     SampleImage("immunohistochemistry", True, "yxc"),
-    SampleImage("kidney", True, "zyxc"),
-    SampleImage("lily", True, "yxc"),
+    SampleImage("kidney", False, "zyxc"),
+    SampleImage("lily", False, "yxc"),
     SampleImage("logo", True, "yxc"),
     SampleImage("microaneurysms", False),
     SampleImage("moon", False),
-    SampleImage("nickel_solidification", False, "zyx"),
+    SampleImage("nickel_solidification", False, "tyx"),
     SampleImage("page", False),
     SampleImage("palisades_of_vogt", False, "zyx"),
     SampleImage("protein_transport", False, "tcyx"),
@@ -92,6 +94,7 @@ def stereo_motorcycle() -> list[WidgetDataModel[ip.ImgArray]]:
 
 
 def _make_provider(sample: SampleImage):
+    @configure_gui(run_async=True)
     def make_sample_image() -> WidgetDataModel[ip.ImgArray]:
         from skimage import data
 
@@ -100,7 +103,10 @@ def _make_provider(sample: SampleImage):
             title = sample.filename.replace("_", " ").title()
         else:
             title = sample.title
-        return image_to_model(ip.asarray(img, axes=sample.axes), title=title)
+        img = ip.asarray(img, axes=sample.axes)
+        if not sample.is_rgb:
+            img = img.sort_axes()
+        return image_to_model(img, title=title, is_rgb=sample.is_rgb)
 
     make_sample_image.__name__ = sample.filename
     return make_sample_image

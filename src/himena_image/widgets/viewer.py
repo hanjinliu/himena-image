@@ -1,20 +1,17 @@
 from __future__ import annotations
 
-from collections.abc import Hashable
 from typing import Any, TYPE_CHECKING
 from enum import Enum, auto
 import cmap
 from qtpy import QtWidgets as QtW, QtCore
 import numpy as np
-import impy as ip
-from impy.arrays.axesmixin import AxesMixin
 
 from ndv import NDViewer, DataWrapper
 from superqt import QEnumComboBox
 from himena.consts import StandardType
 from himena.types import WidgetDataModel
 from himena.standards.model_meta import ImageMeta
-from himena.plugins import protocol_override
+from himena.plugins import validate_protocol
 
 if TYPE_CHECKING:
     from ndv import Indices
@@ -41,52 +38,57 @@ class ComplexConversionRule(Enum):
         raise ValueError(f"Unknown complex conversion rule: {self}")
 
 
-class ModelDataWrapper(DataWrapper[AxesMixin]):
+class ModelDataWrapper(DataWrapper):
     def __init__(self, model: WidgetDataModel):
-        if isinstance(img := model.value, np.ndarray):
-            img = ip.asarray(img)
-        if not isinstance(img := model.value, AxesMixin):
-            raise ValueError(f"Expected an impy MetaArray object, got {type(img)}.")
-        if not isinstance(model.metadata, ImageMeta):
-            raise ValueError("Expected image meta data.")
-        super().__init__(img)
-        self._meta = model.metadata
+        super().__init__(model.value)
+        if not isinstance(meta := model.metadata, ImageMeta):
+            raise ValueError("Invalid metadata")
+        self._meta = meta
         self._type = model.type
-        self._dtype = img.dtype
         self._complex_conversion = ComplexConversionRule.ABS
 
     @classmethod
     def supports(cls, obj: Any) -> bool:
         return isinstance(obj, WidgetDataModel)
 
-    def guess_channel_axis(self) -> Hashable | None:
-        return self._meta.channel_axis
-
     def isel(self, indexers: Indices) -> np.ndarray:
         """Select a slice from a data store using (possibly) named indices."""
+        import dask.array as da
 
         slices = self._indices_to_slice(indexers)
         out = self._data[slices]
-        if isinstance(out, ip.LazyImgArray):
+        if isinstance(out, da.Array):
             out = out.compute()
-        if self._dtype.kind == "b":
+        assert isinstance(out, np.ndarray)
+        if out.dtype.kind == "b":
             return out.astype(np.uint8)
-        elif self._dtype.kind == "c":
+        elif out.dtype.kind == "c":
             return self._complex_conversion.apply(out)
         return out
 
     def _indices_to_slice(self, indexers: Indices) -> tuple[int | slice, ...]:
         slices = [slice(None)] * self._data.ndim
+        if self._meta.axes is not None:
+            axis_names = [a.name for a in self._meta.axes]
+        else:
+            axis_names = list(range(len(self._data.shape)))
         for k, v in indexers.items():
             if isinstance(k, str):
-                idx = self._meta.axes.index(k)
+                idx = axis_names.index(k)
             else:
                 idx = k
             slices[idx] = v
         return tuple(slices)
 
+    def sizes(self):
+        if axes := self._meta.axes:
+            names = [a.name for a in axes]
+        else:
+            names = list(range(len(self._data.shape)))
+        return dict(zip(names, self._data.shape))
 
-class HimenaImageViewer(NDViewer):
+
+class NDImageViewer(NDViewer):
     _data_wrapper: ModelDataWrapper
 
     def __init__(self):
@@ -112,19 +114,20 @@ class HimenaImageViewer(NDViewer):
         layout.addWidget(self._set_range_btn)
         layout.addWidget(self._add_roi_btn)
 
-    @protocol_override
+    @validate_protocol
     def update_model(self, model: WidgetDataModel):
         self.set_data(ModelDataWrapper(model))
-        is_complex = self._data_wrapper._dtype.kind == "c"
+        is_complex = model.value.dtype.kind == "c"
         self._complex_conversion_rule_cbox.setVisible(is_complex)
         if model.type == StandardType.IMAGE_LABELS:
             ...  # TODO: cyclic colormap
+        self.set_ndim(min(3, len(model.value.shape)))
         if is_complex:
             self._complex_conversion_rule_cbox.setCurrentEnum(ComplexConversionRule.ABS)
         else:
             self.refresh()
 
-    @protocol_override
+    @validate_protocol
     def to_model(self) -> WidgetDataModel:
         return WidgetDataModel(
             value=self.data,
@@ -137,18 +140,18 @@ class HimenaImageViewer(NDViewer):
             ),
         )
 
-    @protocol_override
+    @validate_protocol
     def size_hint(self) -> tuple[int, int]:
         return (320, 400)
 
-    @protocol_override
+    @validate_protocol
     def model_type(self) -> str:
         return self._data_wrapper._type
 
     def current_indices(self) -> dict[str, int]:
         return self._dims_sliders.value()
 
-    @protocol_override
+    @validate_protocol
     def control_widget(self):
         return self._control_widget
 
