@@ -13,22 +13,33 @@ MENUS = ["image/transform", "/model_menu/transform"]
     title="Shift ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
+    command_id="himena-image:shift",
 )
 def shift(model: WidgetDataModel) -> Parametric:
+    shape = model.value.shape
+    if len(shape) < 2:
+        raise ValueError("The image must have at least 2 dimensions.")
+    max_size = max(shape)
+
     @configure_gui(
-        preview=True, dimension={"choices": make_dims_annotation(model)}, run_async=True
+        preview=True,
+        shift={
+            "options": {
+                "widget_type": "FloatSpinBox",
+                "min": -max_size,
+                "max": max_size,
+            }
+        },
+        run_async=True,
     )
     def run_shift(
         shift: tuple[float, float],
         mode: PaddingMode = "constant",
-        value: float = 0.0,
-        dimension: int = 2,
+        cval: float = 0.0,
         is_previewing: bool = False,
     ) -> WidgetDataModel:
-        if len(shift) != dimension:
-            raise ValueError("The length of shift must be equal to the dimension.")
         img = model_to_image(model, is_previewing)
-        out = img.shift(shift, mode=mode, value=value, dims=dimension)
+        out = img.shift(shift, mode=mode, cval=cval, dims=2)
         return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_shift
@@ -38,23 +49,21 @@ def shift(model: WidgetDataModel) -> Parametric:
     title="Rotate ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
+    command_id="himena-image:rotate",
 )
 def rotate(model: WidgetDataModel) -> Parametric:
-    @configure_gui(
-        preview=True, dimension={"choices": make_dims_annotation(model)}, run_async=True
-    )
+    @configure_gui(preview=True, run_async=True)
     def run_rotate(
         degree: Annotated[float, {"min": -90, "max": 90, "widget_type": "FloatSlider"}],
         order: InterpolationOrder = 3,
         mode: PaddingMode = "constant",
         cval: float = 0.0,
-        dimension: int = 2,
         is_previewing: bool = False,
     ) -> WidgetDataModel:
         if abs(degree) < 1e-4:
             return model
         img = model_to_image(model, is_previewing)
-        out = img.rotate(degree, mode=mode, cval=cval, order=order, dims=dimension)
+        out = img.rotate(degree, mode=mode, cval=cval, order=order)
         return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_rotate
@@ -64,6 +73,7 @@ def rotate(model: WidgetDataModel) -> Parametric:
     title="Flip ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
+    command_id="himena-image:flip",
 )
 def flip(model: WidgetDataModel) -> Parametric:
     @configure_gui(
@@ -87,6 +97,7 @@ def flip(model: WidgetDataModel) -> Parametric:
     title="Zoom ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
+    command_id="himena-image:zoom",
 )
 def zoom(model: WidgetDataModel) -> Parametric:
     @configure_gui(
@@ -119,6 +130,7 @@ def zoom(model: WidgetDataModel) -> Parametric:
     title="Bin ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
+    command_id="himena-image:bin",
 )
 def bin(model: WidgetDataModel) -> Parametric:
     @configure_gui(
@@ -141,6 +153,7 @@ def bin(model: WidgetDataModel) -> Parametric:
     title="Drift correction ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
+    command_id="himena-image:drift_correction",
 )
 def drift_correction(model: WidgetDataModel) -> Parametric:
     """Correct drift in the image."""

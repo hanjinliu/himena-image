@@ -15,6 +15,7 @@ MENUS = ["image/filter", "/model_menu/filter"]
     title="Gaussian Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
+    command_id="himena-image:gaussian_filter",
 )
 def gaussian_filter(model: WidgetDataModel) -> Parametric:
     @configure_gui(
@@ -38,6 +39,7 @@ def gaussian_filter(model: WidgetDataModel) -> Parametric:
     title="Median Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
+    command_id="himena-image:median_filter",
 )
 def median_filter(model: WidgetDataModel) -> Parametric:
     @configure_gui(
@@ -63,13 +65,14 @@ def median_filter(model: WidgetDataModel) -> Parametric:
     title="Mean Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
+    command_id="himena-image:mean_filter",
 )
 def mean_filter(model: WidgetDataModel) -> Parametric:
     @configure_gui(
         dimension={"choices": make_dims_annotation(model)}, preview=True, run_async=True
     )
     def run_mean_filter(
-        radius: Annotated[float, {"min": 0.0}],
+        radius: Annotated[float, {"min": 0.0}] = 1.0,
         mode: PaddingMode = "reflect",
         cval: float = 0,
         dimension: int = 2,
@@ -86,6 +89,7 @@ def mean_filter(model: WidgetDataModel) -> Parametric:
     title="STD Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
+    command_id="himena-image:std_filter",
 )
 def std_filter(model: WidgetDataModel) -> Parametric:
     """Standard deviation filter."""
@@ -111,6 +115,7 @@ def std_filter(model: WidgetDataModel) -> Parametric:
     title="Coef Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
+    command_id="himena-image:coef_filter",
 )
 def coef_filter(model: WidgetDataModel) -> Parametric:
     """Coefficient of variation filter."""
@@ -136,6 +141,7 @@ def coef_filter(model: WidgetDataModel) -> Parametric:
     title="Difference of Gaussian (DoG) Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
+    command_id="himena-image:dog_filter",
 )
 def dog_filter(model: WidgetDataModel) -> Parametric:
     @configure_gui(
@@ -158,6 +164,7 @@ def dog_filter(model: WidgetDataModel) -> Parametric:
     title="Laplacian Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
+    command_id="himena-image:laplacian_filter",
 )
 def laplacian_filter(model: WidgetDataModel) -> Parametric:
     @configure_gui(
@@ -179,6 +186,7 @@ def laplacian_filter(model: WidgetDataModel) -> Parametric:
     title="Difference of Hessian (DoH) Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
+    command_id="himena-image:doh_filter",
 )
 def doh_filter(model: WidgetDataModel) -> Parametric:
     @configure_gui(
@@ -200,6 +208,7 @@ def doh_filter(model: WidgetDataModel) -> Parametric:
     title="Laplacian of Gaussian (LoG) Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
+    command_id="himena-image:log_filter",
 )
 def log_filter(model: WidgetDataModel) -> Parametric:
     @configure_gui(
@@ -221,8 +230,11 @@ def log_filter(model: WidgetDataModel) -> Parametric:
     title="Rolling ball ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
+    command_id="himena-image:rolling_ball",
 )
 def rolling_ball(model: WidgetDataModel) -> Parametric:
+    """Remove or create a background using the rolling-ball algorithm."""
+
     @configure_gui(
         dimension={"choices": make_dims_annotation(model)},
         run_async=True,
@@ -243,8 +255,10 @@ def rolling_ball(model: WidgetDataModel) -> Parametric:
     title="Threshold ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
+    command_id="himena-image:threshold",
 )
 def threshold(model: WidgetDataModel) -> Parametric:
+    """Binarize the image using a threshold value."""
     from skimage.filters import threshold_yen
 
     img = ip.asarray(model.value)
@@ -278,7 +292,6 @@ def threshold(model: WidgetDataModel) -> Parametric:
         if not dark_background:
             out = ~out
         model_out = image_to_model(out, orig=model, is_previewing=is_previewing)
-        model_out.type = StandardType.IMAGE_BINARY
         return model_out
 
     return run_threshold
@@ -288,8 +301,11 @@ def threshold(model: WidgetDataModel) -> Parametric:
     title="Edge Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
+    command_id="himena-image:edge_filter",
 )
 def edge_filter(model: WidgetDataModel) -> Parametric:
+    """Filters for detecting edges in the image."""
+
     @configure_gui(
         dimension={"choices": make_dims_annotation(model)}, preview=True, run_async=True
     )
@@ -308,7 +324,8 @@ def edge_filter(model: WidgetDataModel) -> Parametric:
 @register_function(
     title="Smooth mask ...",
     menus=MENUS,
-    types=[StandardType.IMAGE_BINARY],
+    types=[StandardType.IMAGE],
+    command_id="himena-image:smooth_mask",
 )
 def smooth_mask(model: WidgetDataModel) -> Parametric:
     @configure_gui(
@@ -332,3 +349,44 @@ def smooth_mask(model: WidgetDataModel) -> Parametric:
         return image_to_model(out, orig=model)
 
     return run_smooth_mask
+
+
+@register_function(
+    title="Kalman Filter ...",
+    menus=MENUS,
+    types=[StandardType.IMAGE],
+    command_id="himena-image:kalman_filter",
+)
+def kalman_filter(model: WidgetDataModel) -> Parametric:
+    """Denoise time-series image using the Kalman filter."""
+    img = model_to_image(model)
+    along_choices = [str(a) for a in img.axes]
+    if "t" in along_choices:
+        along_default = "t"
+    elif "z" in along_choices:
+        along_default = "z"
+    else:
+        along_default = along_choices[0]
+
+    @configure_gui(
+        title="Kalman Filter",
+        along={"choices": along_choices, "value": along_default},
+        dimension={"choices": make_dims_annotation(model)},
+        preview=True,
+        run_async=True,
+    )
+    def run_kalman_filter(
+        gain: Annotated[float, {"min": 0.0}] = 0.1,
+        noise_var: Annotated[float, {"min": 0.0}] = 0.1,
+        along: str = along_default,
+        dimension: int = 2,
+    ) -> WidgetDataModel:
+        out = model_to_image(model).kalman_filter(
+            gain=gain,
+            noise_var=noise_var,
+            dims=dimension,
+            along=along,
+        )
+        return image_to_model(out, orig=model)
+
+    return run_kalman_filter

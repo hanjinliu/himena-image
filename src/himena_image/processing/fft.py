@@ -13,6 +13,7 @@ configure_submenu("/model_menu/fft", title="Fourier transform")
     title="FFT ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
+    command_id="himena-image:fft",
 )
 def fft(model: WidgetDataModel) -> Parametric:
     """Fast Fourier transformation of an image."""
@@ -41,8 +42,11 @@ def fft(model: WidgetDataModel) -> Parametric:
     title="IFFT ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
+    command_id="himena-image:ifft",
 )
 def ifft(model: WidgetDataModel) -> Parametric:
+    """Inverse fast Fourier transformation of a frequency image."""
+
     @configure_gui(
         dimension={"choices": make_dims_annotation(model)},
         preview=True,
@@ -68,13 +72,53 @@ def ifft(model: WidgetDataModel) -> Parametric:
 
 
 @register_function(
+    title="Power spectrum ...",
+    menus=MENUS,
+    types=[StandardType.IMAGE],
+    command_id="himena-image:power_spectrum",
+)
+def power_spectrum(model: WidgetDataModel) -> Parametric:
+    @configure_gui(
+        dimension={"choices": make_dims_annotation(model)},
+        norm={"label": "normalize maximum to 1"},
+        zero_norm={"label": "normalize zero frequency to 0"},
+        preview=True,
+        run_async=True,
+    )
+    def run_power_spectrum(
+        origin_in_center: bool = True,
+        norm: bool = False,
+        zero_norm: bool = False,
+        double_precision: bool = False,
+        dimension=2,
+        is_previewing: bool = False,
+    ) -> WidgetDataModel:
+        img = model_to_image(model, is_previewing)
+        out = img.power_spectra(
+            shift=origin_in_center,
+            double_precision=double_precision,
+            norm=norm,
+            zero_norm=zero_norm,
+            dims=dimension,
+        )
+        return image_to_model(out, orig=model, is_previewing=is_previewing)
+
+    return run_power_spectrum
+
+
+@register_function(
     title="Low-pass Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
+    command_id="himena-image:fft-filter:lowpass_filter",
 )
 def lowpass_filter(model: WidgetDataModel) -> Parametric:
     @configure_gui(
-        dimension={"choices": make_dims_annotation(model)}, preview=True, run_async=True
+        dimension={"choices": make_dims_annotation(model)},
+        cutoff={"min": 0.0, "max": 1.0},
+        order={"min": 1},
+        preview=True,
+        run_async=True,
     )
     def run_lowpass_filter(
         cutoff: float = 0.2,
@@ -82,7 +126,6 @@ def lowpass_filter(model: WidgetDataModel) -> Parametric:
         dimension=2,
         is_previewing: bool = False,
     ) -> WidgetDataModel:
-        # TODO: lazy
         img = model_to_image(model)
         out = img.lowpass_filter(cutoff=cutoff, order=order, dims=dimension)
         return image_to_model(out, orig=model, is_previewing=is_previewing)
@@ -94,10 +137,13 @@ def lowpass_filter(model: WidgetDataModel) -> Parametric:
     title="High-pass Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
+    command_id="himena-image:fft-filter:highpass_filter",
 )
 def highpass_filter(model: WidgetDataModel) -> Parametric:
     @configure_gui(
         dimension={"choices": make_dims_annotation(model)},
+        cutoff={"min": 0.0, "max": 1.0},
+        order={"min": 1},
         preview=True,
         run_async=True,
     )
@@ -107,7 +153,6 @@ def highpass_filter(model: WidgetDataModel) -> Parametric:
         dimension=2,
         is_previewing: bool = False,
     ) -> WidgetDataModel:
-        # TODO: lazy
         img = model_to_image(model)
         out = img.highpass_filter(cutoff=cutoff, order=order, dims=dimension)
         return image_to_model(out, orig=model, is_previewing=is_previewing)
@@ -119,10 +164,15 @@ def highpass_filter(model: WidgetDataModel) -> Parametric:
     title="Band-pass Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
+    command_id="himena-image:fft-filter:bandpass_filter",
 )
 def bandpass_filter(model: WidgetDataModel) -> Parametric:
     @configure_gui(
-        dimension={"choices": make_dims_annotation(model)}, preview=True, run_async=True
+        dimension={"choices": make_dims_annotation(model)},
+        cutoff={"min": 0.0, "max": 1.0},
+        cuton={"min": 0.0, "max": 1.0},
+        preview=True,
+        run_async=True,
     )
     def run_bandpass_filter(
         cuton: float = 0.2,
@@ -131,7 +181,6 @@ def bandpass_filter(model: WidgetDataModel) -> Parametric:
         dimension=2,
         is_previewing: bool = False,
     ) -> WidgetDataModel:
-        # TODO: lazy
         img = model_to_image(model)
         out = img.bandpass_filter(
             cuton=cuton, cutoff=cutoff, order=order, dims=dimension

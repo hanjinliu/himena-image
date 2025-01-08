@@ -35,6 +35,8 @@ def image_to_model(
     )
     if orig:
         out = orig.with_value(img.value, title=title, metadata=meta)
+        if title is None:
+            out = out.with_title_numbering()
     else:
         out = WidgetDataModel(
             value=img.value,
@@ -45,6 +47,18 @@ def image_to_model(
     if is_previewing:
         meta.current_indices = None
         meta.contrast_limits = None
+    return out
+
+
+def label_to_model(
+    img: ip.ImgArray | ip.LazyImgArray,
+    title: str | None = None,
+    is_rgb: bool = False,
+    orig: WidgetDataModel | None = None,
+    is_previewing: bool = False,
+) -> WidgetDataModel:
+    out = image_to_model(img, title, is_rgb, orig, is_previewing)
+    out.type = StandardType.IMAGE_LABELS
     return out
 
 
@@ -104,8 +118,12 @@ def model_to_image(
     if isinstance(img, da.Array):
         out = ip.lazy.asarray(img, axes=axes, chunks=img.chunksize)
     elif is_previewing:
-        n_multi = img.ndim - 2
-        out = ip.lazy.asarray(img, axes=axes, chunks=(1,) * n_multi + (-1, -1))
+        n_multi = img.ndim - 3 if meta.is_rgb else img.ndim - 2
+        if n_multi == 0:
+            out = ip.asarray(img, axes=axes)
+        else:
+            chunks_rest = (-1, -1, -1) if meta.is_rgb else (-1, -1)
+            out = ip.lazy.asarray(img, axes=axes, chunks=(1,) * n_multi + chunks_rest)
     else:
         out = ip.asarray(img, axes=axes)
     if scale is not None and unit is not None:

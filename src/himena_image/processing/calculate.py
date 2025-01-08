@@ -1,7 +1,7 @@
-from typing import Annotated, Literal
+from typing import Literal
 from cmap import Colormap
 
-from himena import WidgetDataModel, Parametric, AppContext
+from himena import WidgetDataModel, Parametric
 from himena.plugins import register_function, configure_gui
 from himena.consts import StandardType
 from himena.standards.model_meta import ImageMeta, DataFramePlotMeta
@@ -10,54 +10,6 @@ import numpy as np
 from himena_image.utils import image_to_model, model_to_image
 
 MENU = "image/calculate"
-
-
-@register_function(
-    title="Add images ...",
-    menus=MENU,
-    enablement=AppContext.num_sub_windows > 1,
-)
-def add() -> Parametric:
-    def run_add(
-        image_1: Annotated[WidgetDataModel, {"types": [StandardType.IMAGE]}],
-        image_2: Annotated[WidgetDataModel, {"types": [StandardType.IMAGE]}],
-    ) -> WidgetDataModel:
-        out = image_1.value + image_2.value
-        return image_1.with_value(out)
-
-    return run_add
-
-
-@register_function(
-    title="Subtract images ...",
-    menus=MENU,
-    enablement=AppContext.num_sub_windows > 1,
-)
-def subtract() -> Parametric:
-    def run_subtract(
-        image_1: Annotated[WidgetDataModel, {"types": [StandardType.IMAGE]}],
-        image_2: Annotated[WidgetDataModel, {"types": [StandardType.IMAGE]}],
-    ) -> WidgetDataModel:
-        out = image_1.value - image_2.value
-        return image_1.with_value(out)
-
-    return run_subtract
-
-
-@register_function(
-    title="Multiply images ...",
-    menus=MENU,
-    enablement=AppContext.num_sub_windows > 1,
-)
-def multiply() -> Parametric:
-    def run_multiply(
-        image_1: Annotated[WidgetDataModel, {"types": [StandardType.IMAGE]}],
-        image_2: Annotated[WidgetDataModel, {"types": [StandardType.IMAGE]}],
-    ) -> WidgetDataModel:
-        out = image_1.value * image_2.value
-        return image_1.with_value(out)
-
-    return run_multiply
 
 
 @register_function(
@@ -112,7 +64,7 @@ def invert(model: WidgetDataModel) -> WidgetDataModel:
     title="Profile line",
     menus=MENU,
     types=[StandardType.IMAGE],
-    command_id="himena-image:profile-line",
+    command_id="himena-image:profile_line",
     keybindings=["/"],
 )
 def profile_line(model: WidgetDataModel) -> WidgetDataModel:
