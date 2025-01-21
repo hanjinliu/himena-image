@@ -1,20 +1,20 @@
 from __future__ import annotations
 
-from typing import Any, TYPE_CHECKING
+from typing import Any, TYPE_CHECKING, Hashable, Mapping, Sequence
 from enum import Enum, auto
-import cmap
+from cmap import Colormap
 from qtpy import QtWidgets as QtW, QtCore
 import numpy as np
 
-from ndv import NDViewer, DataWrapper
+from ndv import DataWrapper, ArrayViewer
 from superqt import QEnumComboBox
 from himena.consts import StandardType
 from himena.types import WidgetDataModel
-from himena.standards.model_meta import ImageMeta
+from himena.standards.model_meta import ImageMeta, ArrayAxis
 from himena.plugins import validate_protocol
 
 if TYPE_CHECKING:
-    from ndv import Indices
+    pass
 
 
 class ComplexConversionRule(Enum):
@@ -51,12 +51,25 @@ class ModelDataWrapper(DataWrapper):
     def supports(cls, obj: Any) -> bool:
         return isinstance(obj, WidgetDataModel)
 
-    def isel(self, indexers: Indices) -> np.ndarray:
+    @property
+    def dims(self) -> tuple[str, ...]:
+        if axes := self._meta.axes:
+            return tuple(a.name for a in axes)
+        return tuple(f"axis_{i}" for i in range(len(self._data.shape)))
+
+    @property
+    def coords(self) -> Mapping[Hashable, Sequence]:
+        """Return the coordinates for the data."""
+        return {d: range(s) for d, s in zip(self.dims, self.data.shape)}
+
+    def isel(self, indexers: Mapping[int, int | slice]) -> np.ndarray:
         """Select a slice from a data store using (possibly) named indices."""
         import dask.array as da
 
-        slices = self._indices_to_slice(indexers)
-        out = self._data[slices]
+        sl = [slice(None)] * len(self._data.shape)
+        for k, v in indexers.items():
+            sl[k] = v
+        out = self._data[tuple(sl)]
         if isinstance(out, da.Array):
             out = out.compute()
         assert isinstance(out, np.ndarray)
@@ -66,20 +79,6 @@ class ModelDataWrapper(DataWrapper):
             return self._complex_conversion.apply(out)
         return out
 
-    def _indices_to_slice(self, indexers: Indices) -> tuple[int | slice, ...]:
-        slices = [slice(None)] * self._data.ndim
-        if self._meta.axes is not None:
-            axis_names = [a.name for a in self._meta.axes]
-        else:
-            axis_names = list(range(len(self._data.shape)))
-        for k, v in indexers.items():
-            if isinstance(k, str):
-                idx = axis_names.index(k)
-            else:
-                idx = k
-            slices[idx] = v
-        return tuple(slices)
-
     def sizes(self):
         if axes := self._meta.axes:
             names = [a.name for a in axes]
@@ -88,9 +87,7 @@ class ModelDataWrapper(DataWrapper):
         return dict(zip(names, self._data.shape))
 
 
-class NDImageViewer(NDViewer):
-    _data_wrapper: ModelDataWrapper
-
+class NDImageViewer(ArrayViewer):
     def __init__(self):
         super().__init__()
         self._control_widget = QtW.QWidget()
@@ -109,34 +106,35 @@ class NDImageViewer(NDViewer):
             self._on_complex_conversion_rule_changed
         )
         layout.addWidget(self._complex_conversion_rule_cbox)
-        layout.addWidget(self._channel_mode_btn)
-        layout.addWidget(self._ndims_btn)
-        layout.addWidget(self._set_range_btn)
-        layout.addWidget(self._add_roi_btn)
 
     @validate_protocol
     def update_model(self, model: WidgetDataModel):
-        self.set_data(ModelDataWrapper(model))
+        self.data = model
         is_complex = model.value.dtype.kind == "c"
         self._complex_conversion_rule_cbox.setVisible(is_complex)
         if model.type == StandardType.IMAGE_LABELS:
             ...  # TODO: cyclic colormap
-        self.set_ndim(min(3, len(model.value.shape)))
+        meta = model.metadata
+        if isinstance(meta, ImageMeta):
+            for ch, lut in zip(meta.channels, self.display_model.luts.values()):
+                lut.cmap = ch.colormap or "gray"
+                lut.clims = ch.contrast_limits
         if is_complex:
             self._complex_conversion_rule_cbox.setCurrentEnum(ComplexConversionRule.ABS)
-        else:
-            self.refresh()
 
     @validate_protocol
     def to_model(self) -> WidgetDataModel:
+        indices = [
+            None if isinstance(v, slice) else v
+            for v in self.display_model.current_index.values()
+        ]
+        self.display_model.luts
         return WidgetDataModel(
             value=self.data,
             type=self.model_type(),
             metadata=ImageMeta(
-                current_indices=self._data_wrapper._indices_to_slice(
-                    self._dims_sliders.value()
-                ),
-                axes=[str(a) for a in self.current_indices().keys()],
+                current_indices=indices,
+                axes=[ArrayAxis(name=a) for a in self.data.dims],
             ),
         )
 
@@ -146,21 +144,24 @@ class NDImageViewer(NDViewer):
 
     @validate_protocol
     def model_type(self) -> str:
-        return self._data_wrapper._type
+        return self.data_wrapper._type
 
-    def current_indices(self) -> dict[str, int]:
-        return self._dims_sliders.value()
+    @validate_protocol
+    def native_widget(self):
+        return self.view._qwidget
 
     @validate_protocol
     def control_widget(self):
         return self._control_widget
 
     def _on_complex_conversion_rule_changed(self, enum_: ComplexConversionRule):
-        self._data_wrapper._complex_conversion = enum_
+        self.data_wrapper._complex_conversion = enum_
         if enum_ is ComplexConversionRule.PHASE:
             cmap_name = "cmocean:phase"
         else:
             cmap_name = "inferno"
-        for ctrl in self._lut_ctrls.values():
-            ctrl._cmap.setCurrentColormap(cmap.Colormap(cmap_name))
-        self.refresh()
+        # for ctrl in self._lut_ctrls.values():
+        #     ctrl._cmap.setCurrentColormap(cmap.Colormap(cmap_name))
+        # self.refresh()
+        for val in self.display_model.luts.values():
+            val.cmap = Colormap(cmap_name)

@@ -15,7 +15,7 @@ MENUS = ["image/filter", "/model_menu/filter"]
     title="Gaussian Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:gaussian_filter",
+    command_id="himena-image:0-filter-basic:gaussian_filter",
 )
 def gaussian_filter(model: WidgetDataModel) -> Parametric:
     @configure_gui(
@@ -39,7 +39,7 @@ def gaussian_filter(model: WidgetDataModel) -> Parametric:
     title="Median Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:median_filter",
+    command_id="himena-image:0-filter-basic:median_filter",
 )
 def median_filter(model: WidgetDataModel) -> Parametric:
     @configure_gui(
@@ -65,7 +65,7 @@ def median_filter(model: WidgetDataModel) -> Parametric:
     title="Mean Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:mean_filter",
+    command_id="himena-image:0-filter-basic:mean_filter",
 )
 def mean_filter(model: WidgetDataModel) -> Parametric:
     @configure_gui(
@@ -89,7 +89,7 @@ def mean_filter(model: WidgetDataModel) -> Parametric:
     title="STD Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:std_filter",
+    command_id="himena-image:1-filter-variance:std_filter",
 )
 def std_filter(model: WidgetDataModel) -> Parametric:
     """Standard deviation filter."""
@@ -115,7 +115,7 @@ def std_filter(model: WidgetDataModel) -> Parametric:
     title="Coef Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:coef_filter",
+    command_id="himena-image:1-filter-variance:coef_filter",
 )
 def coef_filter(model: WidgetDataModel) -> Parametric:
     """Coefficient of variation filter."""
@@ -141,7 +141,7 @@ def coef_filter(model: WidgetDataModel) -> Parametric:
     title="Difference of Gaussian (DoG) Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:dog_filter",
+    command_id="himena-image:2-filter-comp:dog_filter",
 )
 def dog_filter(model: WidgetDataModel) -> Parametric:
     @configure_gui(
@@ -164,7 +164,7 @@ def dog_filter(model: WidgetDataModel) -> Parametric:
     title="Laplacian Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:laplacian_filter",
+    command_id="himena-image:2-filter-comp:laplacian_filter",
 )
 def laplacian_filter(model: WidgetDataModel) -> Parametric:
     @configure_gui(
@@ -186,7 +186,7 @@ def laplacian_filter(model: WidgetDataModel) -> Parametric:
     title="Difference of Hessian (DoH) Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:doh_filter",
+    command_id="himena-image:2-filter-comp:doh_filter",
 )
 def doh_filter(model: WidgetDataModel) -> Parametric:
     @configure_gui(
@@ -208,7 +208,7 @@ def doh_filter(model: WidgetDataModel) -> Parametric:
     title="Laplacian of Gaussian (LoG) Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:log_filter",
+    command_id="himena-image:2-filter-comp:log_filter",
 )
 def log_filter(model: WidgetDataModel) -> Parametric:
     @configure_gui(
@@ -230,7 +230,7 @@ def log_filter(model: WidgetDataModel) -> Parametric:
     title="Rolling ball ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:rolling_ball",
+    command_id="himena-image:9-filter-other:rolling_ball",
 )
 def rolling_ball(model: WidgetDataModel) -> Parametric:
     """Remove or create a background using the rolling-ball algorithm."""
@@ -255,7 +255,7 @@ def rolling_ball(model: WidgetDataModel) -> Parametric:
     title="Threshold ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:threshold",
+    command_id="himena-image:9-filter-other:threshold",
 )
 def threshold(model: WidgetDataModel) -> Parametric:
     """Binarize the image using a threshold value."""
@@ -301,7 +301,7 @@ def threshold(model: WidgetDataModel) -> Parametric:
     title="Edge Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:edge_filter",
+    command_id="himena-image:0-filter-basic:edge_filter",
 )
 def edge_filter(model: WidgetDataModel) -> Parametric:
     """Filters for detecting edges in the image."""
@@ -325,7 +325,7 @@ def edge_filter(model: WidgetDataModel) -> Parametric:
     title="Smooth mask ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:smooth_mask",
+    command_id="himena-image:9-filter-other:smooth_mask",
 )
 def smooth_mask(model: WidgetDataModel) -> Parametric:
     @configure_gui(
@@ -355,7 +355,7 @@ def smooth_mask(model: WidgetDataModel) -> Parametric:
     title="Kalman Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:kalman_filter",
+    command_id="himena-image:9-filter-other:kalman_filter",
 )
 def kalman_filter(model: WidgetDataModel) -> Parametric:
     """Denoise time-series image using the Kalman filter."""

@@ -4,7 +4,6 @@ from himena import StandardType, WidgetDataModel, Parametric
 from himena.plugins import register_function, configure_gui
 from himena_image.utils import (
     label_to_model,
-    image_to_model,
     make_dims_annotation,
     model_to_image,
 )
@@ -70,7 +69,10 @@ def peak_local_max(model: WidgetDataModel) -> Parametric:
             use_labels=labels is not None,
             dims=dimension,
         )
-        return image_to_model(out, title=f"Peaks of {model.title}", orig=model)
+        df = {k: out[k].to_numpy() for k in out.columns}
+        return WidgetDataModel(
+            value=df, type=StandardType.DATAFRAME, title=f"Peaks of {model.title}"
+        )
 
     return run_peak_local_max
 
@@ -85,7 +87,7 @@ def region_properties(model: WidgetDataModel) -> Parametric:
     @configure_gui(
         labels={"types": [StandardType.IMAGE_LABELS]},
         properties={
-            "choices": ["area", "centroid", "intensity_mean"],
+            "choices": ["area", "centroid", "intensity_mean"],  # TODO: more features
             "widget_type": "Select",
         },
         run_async=True,
@@ -107,3 +109,23 @@ def region_properties(model: WidgetDataModel) -> Parametric:
         )
 
     return run_region_properties
+
+
+# @register_function(
+#     title="Measure ROIs ...",
+#     menus=MENUS,
+#     types=[StandardType.IMAGE],
+#     command_id="himena-image:measure-rois",
+# )
+# def measure_rois(model: WidgetDataModel) -> Parametric:
+#     ...
+
+#     @configure_gui(
+#         labels={"types": [StandardType.IMAGE_LABELS]},
+#         properties={
+#             "choices": ["area", "centroid", "intensity_mean"],  # TODO: more features
+#             "widget_type": "Select",
+#         },
+#         run_async=True,
+#     )
+#     def run_region_properties(

@@ -5,6 +5,7 @@ from himena_image.processing import (
     fft,
     transform,
     morphology,
+    measure,
 )
 
-del calculate, features, filters, fft, transform, morphology
+del calculate, features, filters, fft, transform, morphology, measure

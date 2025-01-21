@@ -13,7 +13,7 @@ MENUS = ["image/morphology", "/model_menu/morphology"]
     title="Dilation ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:dilation",
+    command_id="himena-image:0-morph-basic:dilation",
 )
 def dilation(model: WidgetDataModel) -> Parametric:
     @configure_gui(
@@ -37,7 +37,7 @@ def dilation(model: WidgetDataModel) -> Parametric:
     title="Erosion ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:erosion",
+    command_id="himena-image:0-morph-basic:erosion",
 )
 def erosion(model: WidgetDataModel) -> Parametric:
     @configure_gui(
@@ -61,7 +61,7 @@ def erosion(model: WidgetDataModel) -> Parametric:
     title="Opening ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:opening",
+    command_id="himena-image:1-morph-comp:opening",
 )
 def opening(model: WidgetDataModel) -> Parametric:
     @configure_gui(
@@ -85,7 +85,7 @@ def opening(model: WidgetDataModel) -> Parametric:
     title="Closing ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:closing",
+    command_id="himena-image:1-morph-comp:closing",
 )
 def closing(model: WidgetDataModel) -> Parametric:
     @configure_gui(
@@ -109,7 +109,7 @@ def closing(model: WidgetDataModel) -> Parametric:
     title="Top-hat Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:tophat",
+    command_id="himena-image:1-morph-comp:tophat",
 )
 def tophat(model: WidgetDataModel) -> Parametric:
     @configure_gui(
@@ -130,10 +130,10 @@ def tophat(model: WidgetDataModel) -> Parametric:
 
 
 @register_function(
-    title="skeletonize ...",
+    title="Skeletonize ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:skeletonize",
+    command_id="himena-image:1-morph-comp:skeletonize",
 )
 def skeletonize(model: WidgetDataModel) -> Parametric:
     @configure_gui(
