@@ -117,5 +117,5 @@ for sample in SKIMAGE_SAMPLES:
         _make_provider(sample),
         title=sample.filename,
         menus=MENU,
-        command_id=f"himena-image:skimage-sample-{sample}",
+        command_id=f"himena-image:skimage-sample:{sample}",
     )
