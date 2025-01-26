@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling>=1.26.1"]
 build-backend = "hatchling.build"
 
 [project]
@@ -29,6 +29,13 @@ dependencies = [
   "ndv",
   "impy-array>=2.4.3",
   "roifile>=2024.5.24",
+]
+
+[project.optional-dependencies]
+all = [
+  "tifffile",
+  "mrcfile",
+  "nd2",
 ]
 
 [project.urls]

@@ -8,7 +8,7 @@ from scipy import ndimage as ndi
 from himena import WidgetDataModel, Parametric, StandardType
 from himena.plugins import register_function, configure_gui
 from himena.standards import roi, model_meta
-from himena._data_wrappers import wrap_array
+from himena.data_wrappers import wrap_array
 
 
 @singledispatch

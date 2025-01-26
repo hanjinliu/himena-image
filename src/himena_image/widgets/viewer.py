@@ -8,13 +8,12 @@ import numpy as np
 
 from ndv import DataWrapper, ArrayViewer
 from superqt import QEnumComboBox
-from himena.consts import StandardType
 from himena.types import WidgetDataModel
 from himena.standards.model_meta import ImageMeta, ArrayAxis
 from himena.plugins import validate_protocol
 
 if TYPE_CHECKING:
-    pass
+    from ndv.views._qt._array_view import _QArrayViewer
 
 
 class ComplexConversionRule(Enum):
@@ -112,8 +111,6 @@ class NDImageViewer(ArrayViewer):
         self.data = model
         is_complex = model.value.dtype.kind == "c"
         self._complex_conversion_rule_cbox.setVisible(is_complex)
-        if model.type == StandardType.IMAGE_LABELS:
-            ...  # TODO: cyclic colormap
         meta = model.metadata
         if isinstance(meta, ImageMeta):
             for ch, lut in zip(meta.channels, self.display_model.luts.values()):
@@ -147,8 +144,8 @@ class NDImageViewer(ArrayViewer):
         return self.data_wrapper._type
 
     @validate_protocol
-    def native_widget(self):
-        return self.view._qwidget
+    def native_widget(self) -> _QArrayViewer:
+        return self.widget()
 
     @validate_protocol
     def control_widget(self):

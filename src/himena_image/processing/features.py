@@ -97,7 +97,7 @@ def region_properties(model: WidgetDataModel) -> Parametric:
         properties: list[str],
     ) -> WidgetDataModel:
         img = model_to_image(model)
-        img.labels = labels
+        img.labels = labels.value
         table = img.regionprops(properties=properties)
         dict_ = {}
         for key, prop in table.items():
@@ -109,23 +109,3 @@ def region_properties(model: WidgetDataModel) -> Parametric:
         )
 
     return run_region_properties
-
-
-# @register_function(
-#     title="Measure ROIs ...",
-#     menus=MENUS,
-#     types=[StandardType.IMAGE],
-#     command_id="himena-image:measure-rois",
-# )
-# def measure_rois(model: WidgetDataModel) -> Parametric:
-#     ...
-
-#     @configure_gui(
-#         labels={"types": [StandardType.IMAGE_LABELS]},
-#         properties={
-#             "choices": ["area", "centroid", "intensity_mean"],  # TODO: more features
-#             "widget_type": "Select",
-#         },
-#         run_async=True,
-#     )
-#     def run_region_properties(

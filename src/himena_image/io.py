@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from functools import partial
 from pathlib import Path
 from typing import Sequence
@@ -8,10 +6,16 @@ import impy as ip
 import numpy as np
 from roifile import ROI_SUBTYPE, ImagejRoi, roiread, roiwrite, ROI_TYPE
 
-from himena import StandardType, WidgetDataModel
+from himena import Parametric, StandardType, WidgetDataModel
+from himena.consts import MenuId
 from himena.standards.model_meta import ImageMeta
 from himena.standards import roi as _roi
-from himena.plugins import register_reader_provider, register_writer_provider
+from himena.plugins import (
+    register_reader_plugin,
+    register_writer_plugin,
+    register_function,
+    configure_gui,
+)
 from himena_image.utils import image_to_model
 
 
@@ -23,7 +27,9 @@ _SUPPORTED_EXT = frozenset(
 )  # fmt: skip
 
 
+@register_reader_plugin
 def read_image(path: Path):
+    """Read as a image model."""
     img = ip.imread(path)
     is_rgb = "c" in img.axes and path.suffix in [".png", ".jpg", ".jpeg"]
     model = image_to_model(img, is_rgb=is_rgb)
@@ -31,7 +37,16 @@ def read_image(path: Path):
     return model
 
 
+@read_image.mark_matcher
+def _(path: Path):
+    if path.suffix in _SUPPORTED_EXT:
+        return StandardType.IMAGE
+    return None
+
+
+@register_writer_plugin
 def write_image(model: WidgetDataModel, path: Path):
+    """Write image model to a file."""
     img = model.value
     _axes = None
     _scales = {}
@@ -46,7 +61,106 @@ def write_image(model: WidgetDataModel, path: Path):
     for a in img.axes:
         a.scale = _scales.get(str(a))
         a.unit = _units.get(str(a))
-    img.imsave(path)
+    return img.imsave(path)
+
+
+@write_image.mark_matcher
+def _(model: WidgetDataModel, path: Path):
+    return model.is_subtype_of(StandardType.ARRAY) and path.suffix in _SUPPORTED_EXT
+
+
+@register_reader_plugin(priority=-10)
+def read_image_as_labels(path: Path):
+    """Read as a image model."""
+    img = ip.imread(path)
+    model = image_to_model(img, is_rgb=False)
+    model.extension_default = path.suffix
+    model.type = StandardType.IMAGE_LABELS
+    return model
+
+
+@read_image_as_labels.mark_matcher
+def _(path: Path):
+    if path.suffix in _SUPPORTED_EXT:
+        return StandardType.IMAGE_LABELS
+    return None
+
+
+@register_reader_plugin
+def read_roi(path: Path):
+    out = roiread(path)
+    if isinstance(out, ImagejRoi):
+        ijrois = [out]
+    else:
+        ijrois = out
+    indices: list[Sequence[int]] = []
+    rois = []
+    for ijroi in ijrois:
+        ind, sroi = _to_standard_roi(ijroi)
+        indices.append(ind)
+        rois.append(sroi)
+    axis_names = ["p", "t", "z", "c"]
+    indices = np.array(indices, dtype=np.int32)
+    val = _roi.RoiListModel(rois, indices=indices, axis_names=axis_names).simplified()
+    return WidgetDataModel(value=val, type=StandardType.ROIS, title=path.name)
+
+
+@read_roi.mark_matcher
+def _(path: Path):
+    ext = "".join(path.suffixes)
+    if ext == ".roi":
+        return StandardType.ROIS
+    elif ext == ".zip":
+        with zipfile.ZipFile(path) as z:
+            if names := z.namelist():
+                if names[0].endswith(".roi"):
+                    return StandardType.ROIS
+    return None
+
+
+@register_writer_plugin
+def write_roi(model: WidgetDataModel, path: Path):
+    if not isinstance(rlist := model.value, _roi.RoiListModel):
+        raise ValueError(f"Must be a RoiListModel, got {type(rlist)}")
+    _ij_position_getter = partial(
+        _to_ij_position, rlist.indices, axis_names=rlist.axis_names
+    )
+    p_s = _ij_position_getter(["p", "position"])
+    t_s = _ij_position_getter(["t", "time"])
+    z_s = _ij_position_getter(["z", "slice"])
+    c_s = _ij_position_getter(["c", "channel"])
+    ijrois: list[ImagejRoi] = []
+    for p, t, z, c, roi in zip(p_s, t_s, z_s, c_s, rlist.items):
+        multi_dims = {
+            "position": p,
+            "t_position": t,
+            "z_position": z,
+            "c_position": c,
+        }
+        ijrois.append(_from_standard_roi(roi, **multi_dims))
+    roiwrite(path, ijrois)
+    return None
+
+
+@write_roi.mark_matcher
+def _(model: WidgetDataModel, path: Path):
+    return model.is_subtype_of(StandardType.ROIS) and path.suffix == ".zip"
+
+
+@register_function(
+    menus=MenuId.FILE,
+    title="Open image in lazy mode ...",
+    command_id="himena-image:io:lazy-imread",
+)
+def lazy_imread() -> Parametric:
+    @configure_gui
+    def run_lazy_imread(path: Path, chunks: list[int]) -> WidgetDataModel:
+        img = ip.lazy.imread(path, chunks=chunks)
+        model = image_to_model(img)
+        model.extension_default = path.suffix
+        return model
+
+    return run_lazy_imread
 
 
 def _get_coords(ijroi: ImagejRoi) -> np.ndarray:
@@ -200,47 +314,6 @@ def _from_standard_roi(
     raise ValueError(f"Unsupported ROI type: {type(roi)}")
 
 
-def read_roi(path: Path):
-    out = roiread(path)
-    if isinstance(out, ImagejRoi):
-        ijrois = [out]
-    else:
-        ijrois = out
-    indices: list[Sequence[int]] = []
-    rois = []
-    for ijroi in ijrois:
-        ind, sroi = _to_standard_roi(ijroi)
-        indices.append(ind)
-        rois.append(sroi)
-    axis_names = ["p", "t", "z", "c"]
-    indices = np.array(indices, dtype=np.int32)
-    val = _roi.RoiListModel(rois, indices=indices, axis_names=axis_names).simplified()
-    return WidgetDataModel(value=val, type=StandardType.ROIS, title=path.name)
-
-
-def write_roi(path: Path, model: WidgetDataModel):
-    if not isinstance(rlist := model.value, _roi.RoiListModel):
-        raise ValueError(f"Must be a RoiListModel, got {type(rlist)}")
-    _ij_position_getter = partial(
-        _to_ij_position, rlist.indices, axis_names=rlist.axis_names
-    )
-    p_s = _ij_position_getter(["p", "position"])
-    t_s = _ij_position_getter(["t", "time"])
-    z_s = _ij_position_getter(["z", "slice"])
-    c_s = _ij_position_getter(["c", "channel"])
-    ijrois: list[ImagejRoi] = []
-    for p, t, z, c, roi in zip(p_s, t_s, z_s, c_s, rlist.items):
-        multi_dims = {
-            "position": p,
-            "t_position": t,
-            "z_position": z,
-            "c_position": c,
-        }
-        ijrois.append(_from_standard_roi(roi, **multi_dims))
-    roiwrite(path, ijrois)
-    return None
-
-
 def _to_ij_position(
     indices: np.ndarray,
     candidates: list[str],
@@ -250,40 +323,3 @@ def _to_ij_position(
         if cand in axis_names:
             return indices[:, axis_names.index(cand)]
     return np.full(indices.shape[0], None, dtype=np.object_)
-
-
-@register_reader_provider
-def read_image_provider(path: Path):
-    ext = "".join(path.suffixes)
-    if ext in _SUPPORTED_EXT:
-        return read_image
-    return None
-
-
-@register_writer_provider
-def write_image_provider(model: WidgetDataModel, path: Path):
-    ext = "".join(path.suffixes)
-    if ext in _SUPPORTED_EXT:
-        return write_image
-    return None
-
-
-@register_reader_provider
-def read_roi_provider(path: Path):
-    ext = "".join(path.suffixes)
-    if ext == ".roi":
-        return read_roi
-    elif ext == ".zip":
-        with zipfile.ZipFile(path) as z:
-            if names := z.namelist():
-                if names[0].endswith(".roi"):
-                    return read_roi
-    return None
-
-
-@register_writer_provider
-def write_roi_provider(model: WidgetDataModel, path: Path):
-    ext = "".join(path.suffixes)
-    if ext == ".zip":
-        return write_roi
-    return None
