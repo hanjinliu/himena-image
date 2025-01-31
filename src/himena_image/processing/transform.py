@@ -14,6 +14,7 @@ MENUS = ["image/transform", "/model_menu/transform"]
     menus=MENUS,
     types=[StandardType.IMAGE],
     command_id="himena-image:shift",
+    run_async=True,
 )
 def shift(model: WidgetDataModel) -> Parametric:
     shape = model.value.shape
@@ -30,7 +31,6 @@ def shift(model: WidgetDataModel) -> Parametric:
                 "max": max_size,
             }
         },
-        run_async=True,
     )
     def run_shift(
         shift: tuple[float, float],
@@ -50,9 +50,10 @@ def shift(model: WidgetDataModel) -> Parametric:
     menus=MENUS,
     types=[StandardType.IMAGE],
     command_id="himena-image:rotate",
+    run_async=True,
 )
 def rotate(model: WidgetDataModel) -> Parametric:
-    @configure_gui(preview=True, run_async=True)
+    @configure_gui(preview=True)
     def run_rotate(
         degree: Annotated[float, {"min": -90, "max": 90, "widget_type": "FloatSlider"}],
         order: InterpolationOrder = 3,
@@ -74,11 +75,10 @@ def rotate(model: WidgetDataModel) -> Parametric:
     menus=MENUS,
     types=[StandardType.IMAGE],
     command_id="himena-image:flip",
+    run_async=True,
 )
 def flip(model: WidgetDataModel) -> Parametric:
-    @configure_gui(
-        preview=True, dimension={"choices": make_dims_annotation(model)}, run_async=True
-    )
+    @configure_gui(preview=True, dimension={"choices": make_dims_annotation(model)})
     def run_flip(
         axis: str,
         is_previewing: bool = False,
@@ -98,11 +98,10 @@ def flip(model: WidgetDataModel) -> Parametric:
     menus=MENUS,
     types=[StandardType.IMAGE],
     command_id="himena-image:zoom",
+    run_async=True,
 )
 def zoom(model: WidgetDataModel) -> Parametric:
-    @configure_gui(
-        preview=True, dimension={"choices": make_dims_annotation(model)}, run_async=True
-    )
+    @configure_gui(preview=True, dimension={"choices": make_dims_annotation(model)})
     def run_zoom(
         factor: float,
         order: InterpolationOrder = 3,
@@ -131,11 +130,10 @@ def zoom(model: WidgetDataModel) -> Parametric:
     menus=MENUS,
     types=[StandardType.IMAGE],
     command_id="himena-image:bin",
+    run_async=True,
 )
 def bin(model: WidgetDataModel) -> Parametric:
-    @configure_gui(
-        preview=True, dimension={"choices": make_dims_annotation(model)}, run_async=True
-    )
+    @configure_gui(preview=True, dimension={"choices": make_dims_annotation(model)})
     def run_bin(
         bin_size: Literal[2, 3, 4, 5, 6, 7, 8],
         method: str = "mean",
@@ -154,6 +152,7 @@ def bin(model: WidgetDataModel) -> Parametric:
     menus=MENUS,
     types=[StandardType.IMAGE],
     command_id="himena-image:drift_correction",
+    run_async=True,
 )
 def drift_correction(model: WidgetDataModel) -> Parametric:
     """Correct drift in the image."""
@@ -169,7 +168,6 @@ def drift_correction(model: WidgetDataModel) -> Parametric:
     @configure_gui(
         along={"choices": along_choices, "value": along_default},
         dimension={"choices": make_dims_annotation(model)},
-        run_async=True,
     )
     def run_drift_correction(
         along: str,

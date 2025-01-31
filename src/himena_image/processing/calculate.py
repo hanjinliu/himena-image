@@ -18,6 +18,7 @@ MENU = "image/calculate"
     title="Projection ...",
     menus=MENU,
     types=[StandardType.IMAGE],
+    run_async=True,
     command_id="himena-image:projection",
 )
 def projection(model: WidgetDataModel) -> Parametric:
@@ -33,7 +34,6 @@ def projection(model: WidgetDataModel) -> Parametric:
 
     @configure_gui(
         axis={"choices": axis_choices, "value": value, "widget_type": "Select"},
-        run_async=True,
     )
     def run_projection(
         axis: str,
@@ -50,6 +50,7 @@ def projection(model: WidgetDataModel) -> Parametric:
     title="Invert",
     menus=MENU,
     types=[StandardType.IMAGE],
+    run_async=True,
     command_id="himena-image:invert",
 )
 def invert(model: WidgetDataModel) -> WidgetDataModel:
@@ -68,19 +69,17 @@ def invert(model: WidgetDataModel) -> WidgetDataModel:
     types=[StandardType.IMAGE],
     command_id="himena-image:profile:profile_line",
     keybindings=["/"],
+    run_async=True,
 )
 def profile_line(model: WidgetDataModel) -> Parametric:
-    """Get the line profile of the image."""
+    """Get the line profile of the current image slice."""
     if not isinstance(meta := model.metadata, ImageMeta):
         raise ValueError("Metadata is missing.")
 
-    def _get_coords():
-        return {
-            "coords": _get_profile_coords(meta),
-            "indices": _get_indices_channel_composite(meta),
-        }
-
-    @configure_gui(run_immediately_with=_get_coords)
+    @configure_gui(
+        coords={"bind": lambda *_: _get_profile_coords(meta)},
+        indices={"bind": lambda *_: _get_indices_channel_composite(meta)},
+    )
     def run_profile_line(
         coords: list[list[float]],
         indices: list[int | None],
@@ -88,7 +87,9 @@ def profile_line(model: WidgetDataModel) -> Parametric:
         img = model_to_image(model)
         _indices = tuple(slice(None) if i is None else i for i in indices)
         img_slice = img[_indices]
-        order = 0 if img.dtype.kind == "b" else 3
+        if isinstance(img_slice, ip.LazyImgArray):
+            img_slice = img_slice.compute()
+        order: int = 0 if img.dtype.kind == "b" else 3
         sliced = img_slice.reslice(coords, order=order)
 
         if sliced.ndim == 2:  # multi-channel
@@ -121,6 +122,7 @@ def profile_line(model: WidgetDataModel) -> Parametric:
     title="Kymograph",
     menus=MENU,
     types=[StandardType.IMAGE],
+    run_async=True,
     command_id="himena-image:profile:kymograph",
 )
 def kymograph(model: WidgetDataModel) -> Parametric:
@@ -140,7 +142,6 @@ def kymograph(model: WidgetDataModel) -> Parametric:
     @configure_gui(
         coords={"bind": _get_profile_coords(meta)},
         along={"choices": axes_names},
-        run_async=True,
     )
     def run_kymograph(
         coords,

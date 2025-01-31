@@ -1,6 +1,6 @@
 from typing import Literal, NamedTuple
 from himena import WidgetDataModel, Parametric
-from himena.plugins import register_function, configure_submenu, configure_gui
+from himena.plugins import register_function, configure_submenu
 from himena_image.utils import image_to_model
 import impy as ip
 
@@ -94,7 +94,6 @@ def stereo_motorcycle() -> list[WidgetDataModel[ip.ImgArray]]:
 
 
 def _make_provider(sample: SampleImage):
-    @configure_gui(run_async=True)
     def make_sample_image() -> WidgetDataModel[ip.ImgArray]:
         from skimage import data
 
@@ -117,5 +116,6 @@ for sample in SKIMAGE_SAMPLES:
         _make_provider(sample),
         title=sample.filename,
         menus=MENU,
+        run_async=True,
         command_id=f"himena-image:skimage-sample:{sample}",
     )

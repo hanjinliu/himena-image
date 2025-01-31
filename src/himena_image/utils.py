@@ -3,7 +3,12 @@ from typing import Literal, overload
 from himena import WidgetDataModel
 import impy as ip
 from himena.consts import StandardType
-from himena.standards.model_meta import ImageMeta, ImageChannel, ArrayAxis
+from himena.standards.model_meta import (
+    ImageMeta,
+    ImageChannel,
+    ArrayAxis,
+    LinearCoordinates,
+)
 
 
 def image_to_model(
@@ -13,6 +18,7 @@ def image_to_model(
     orig: WidgetDataModel | None = None,
     is_previewing: bool = False,
 ) -> WidgetDataModel:
+    """Convert impy image array to WidgetDataModel."""
     if "c" in img.axes and not is_rgb:
         channel_axis = img.axes.index("c")
         if channel_labels := img.axes[channel_axis].labels:
@@ -24,8 +30,12 @@ def image_to_model(
         channel_labels = [""]
     nchannels = img.shape[channel_axis] if channel_axis is not None else 1
     meta = ImageMeta(
-        axes=[ArrayAxis(name=str(a), scale=a.scale, unit=a.unit) for a in img.axes],
-        scale=list(img.scale.values()),
+        axes=[
+            ArrayAxis(name=str(a)).with_linear_coords(scale=a.scale, unit=a.unit)
+            if str(a) != "c"
+            else ArrayAxis(name="c").with_categorical_coords(channel_labels)
+            for a in img.axes
+        ],
         channel_axis=channel_axis,
         channels=[
             ImageChannel(name=channel_labels[i], contrast_limits=None)
@@ -108,8 +118,15 @@ def model_to_image(
     if not isinstance(meta := model.metadata, ImageMeta):
         raise ValueError("Model must have ImageMeta.")
     if meta.axes is not None:
-        scale = {a.name: a.scale if a.scale is not None else 1.0 for a in meta.axes}
-        unit = {a.name: a.unit for a in meta.axes}
+        scale = {}
+        unit = {}
+        axes = {}
+        for a in meta.axes:
+            if isinstance(a.coords, LinearCoordinates):
+                scale[a.name] = a.coords.scale or 1
+                unit[a.name] = a.coords.unit
+            else:
+                scale[a.name] = 1
         axes = list(scale.keys())
     else:
         axes = None

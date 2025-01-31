@@ -13,14 +13,13 @@ configure_submenu("/model_menu/fft", title="Fourier transform")
     title="FFT ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
+    run_async=True,
     command_id="himena-image:fft",
 )
 def fft(model: WidgetDataModel) -> Parametric:
     """Fast Fourier transformation of an image."""
 
-    @configure_gui(
-        dimension={"choices": make_dims_annotation(model)}, preview=True, run_async=True
-    )
+    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
     def run_fft(
         origin_in_center: bool = True,
         double_precision: bool = False,
@@ -42,6 +41,7 @@ def fft(model: WidgetDataModel) -> Parametric:
     title="IFFT ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
+    run_async=True,
     command_id="himena-image:ifft",
 )
 def ifft(model: WidgetDataModel) -> Parametric:
@@ -50,7 +50,6 @@ def ifft(model: WidgetDataModel) -> Parametric:
     @configure_gui(
         dimension={"choices": make_dims_annotation(model)},
         preview=True,
-        run_async=True,
     )
     def run_ifft(
         return_real: bool = True,
@@ -75,6 +74,7 @@ def ifft(model: WidgetDataModel) -> Parametric:
     title="Power spectrum ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
+    run_async=True,
     command_id="himena-image:power_spectrum",
 )
 def power_spectrum(model: WidgetDataModel) -> Parametric:
@@ -83,7 +83,6 @@ def power_spectrum(model: WidgetDataModel) -> Parametric:
         norm={"label": "normalize maximum to 1"},
         zero_norm={"label": "normalize zero frequency to 0"},
         preview=True,
-        run_async=True,
     )
     def run_power_spectrum(
         origin_in_center: bool = True,
@@ -110,6 +109,7 @@ def power_spectrum(model: WidgetDataModel) -> Parametric:
     title="Low-pass Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
+    run_async=True,
     command_id="himena-image:fft-filter:lowpass_filter",
 )
 def lowpass_filter(model: WidgetDataModel) -> Parametric:
@@ -118,7 +118,6 @@ def lowpass_filter(model: WidgetDataModel) -> Parametric:
         cutoff={"min": 0.0, "max": 1.0},
         order={"min": 1},
         preview=True,
-        run_async=True,
     )
     def run_lowpass_filter(
         cutoff: float = 0.2,
@@ -137,6 +136,7 @@ def lowpass_filter(model: WidgetDataModel) -> Parametric:
     title="High-pass Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
+    run_async=True,
     command_id="himena-image:fft-filter:highpass_filter",
 )
 def highpass_filter(model: WidgetDataModel) -> Parametric:
@@ -145,7 +145,6 @@ def highpass_filter(model: WidgetDataModel) -> Parametric:
         cutoff={"min": 0.0, "max": 1.0},
         order={"min": 1},
         preview=True,
-        run_async=True,
     )
     def run_highpass_filter(
         cutoff: float = 0.2,
@@ -164,6 +163,7 @@ def highpass_filter(model: WidgetDataModel) -> Parametric:
     title="Band-pass Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
+    run_async=True,
     command_id="himena-image:fft-filter:bandpass_filter",
 )
 def bandpass_filter(model: WidgetDataModel) -> Parametric:
@@ -172,7 +172,6 @@ def bandpass_filter(model: WidgetDataModel) -> Parametric:
         cutoff={"min": 0.0, "max": 1.0},
         cuton={"min": 0.0, "max": 1.0},
         preview=True,
-        run_async=True,
     )
     def run_bandpass_filter(
         cuton: float = 0.2,

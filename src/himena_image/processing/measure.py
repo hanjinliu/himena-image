@@ -71,6 +71,7 @@ def _slice_array_along_line(arr_nd: NDArray[np.number], xs, ys):
     title="Measure ROIs ...",
     types=StandardType.IMAGE,
     menus=["tools/image/roi", "/model_menu/roi"],
+    run_async=True,
     command_id="himena-image:roi-measure",
 )
 def roi_measure(model: WidgetDataModel) -> Parametric:
@@ -87,7 +88,6 @@ def roi_measure(model: WidgetDataModel) -> Parametric:
     @configure_gui(
         metrics={"choices": metrics_choices, "widget_type": "Select"},
         along={"choices": axes_choices, "widget_type": "Select"},
-        run_async=True,
     )
     def run_measure(
         metrics: list[str],

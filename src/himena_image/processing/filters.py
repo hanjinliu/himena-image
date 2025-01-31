@@ -16,12 +16,12 @@ MENUS = ["image/filter", "/model_menu/filter"]
     menus=MENUS,
     types=[StandardType.IMAGE],
     command_id="himena-image:0-filter-basic:gaussian_filter",
+    run_async=True,
 )
 def gaussian_filter(model: WidgetDataModel) -> Parametric:
     @configure_gui(
         dimension={"choices": make_dims_annotation(model)},
         preview=True,
-        run_async=True,
     )
     def run_gaussian_filter(
         sigma: Annotated[float, {"min": 0.0}] = 1.0,
@@ -40,12 +40,12 @@ def gaussian_filter(model: WidgetDataModel) -> Parametric:
     menus=MENUS,
     types=[StandardType.IMAGE],
     command_id="himena-image:0-filter-basic:median_filter",
+    run_async=True,
 )
 def median_filter(model: WidgetDataModel) -> Parametric:
     @configure_gui(
         dimension={"choices": make_dims_annotation(model)},
         preview=True,
-        run_async=True,
     )
     def run_median_filter(
         radius: Annotated[float, {"min": 0.0}] = 1.0,
@@ -66,11 +66,10 @@ def median_filter(model: WidgetDataModel) -> Parametric:
     menus=MENUS,
     types=[StandardType.IMAGE],
     command_id="himena-image:0-filter-basic:mean_filter",
+    run_async=True,
 )
 def mean_filter(model: WidgetDataModel) -> Parametric:
-    @configure_gui(
-        dimension={"choices": make_dims_annotation(model)}, preview=True, run_async=True
-    )
+    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
     def run_mean_filter(
         radius: Annotated[float, {"min": 0.0}] = 1.0,
         mode: PaddingMode = "reflect",
@@ -90,13 +89,12 @@ def mean_filter(model: WidgetDataModel) -> Parametric:
     menus=MENUS,
     types=[StandardType.IMAGE],
     command_id="himena-image:1-filter-variance:std_filter",
+    run_async=True,
 )
 def std_filter(model: WidgetDataModel) -> Parametric:
     """Standard deviation filter."""
 
-    @configure_gui(
-        dimension={"choices": make_dims_annotation(model)}, preview=True, run_async=True
-    )
+    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
     def run_std_filter(
         radius: Annotated[float, {"min": 0.0}],
         mode: PaddingMode = "reflect",
@@ -116,13 +114,12 @@ def std_filter(model: WidgetDataModel) -> Parametric:
     menus=MENUS,
     types=[StandardType.IMAGE],
     command_id="himena-image:1-filter-variance:coef_filter",
+    run_async=True,
 )
 def coef_filter(model: WidgetDataModel) -> Parametric:
     """Coefficient of variation filter."""
 
-    @configure_gui(
-        dimension={"choices": make_dims_annotation(model)}, preview=True, run_async=True
-    )
+    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
     def run_coef_filter(
         radius: Annotated[float, {"min": 0.0}],
         mode: PaddingMode = "reflect",
@@ -142,11 +139,10 @@ def coef_filter(model: WidgetDataModel) -> Parametric:
     menus=MENUS,
     types=[StandardType.IMAGE],
     command_id="himena-image:2-filter-comp:dog_filter",
+    run_async=True,
 )
 def dog_filter(model: WidgetDataModel) -> Parametric:
-    @configure_gui(
-        dimension={"choices": make_dims_annotation(model)}, preview=True, run_async=True
-    )
+    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
     def run_dog_filter(
         sigma_low: Annotated[float, {"min": 0.0}] = 1.0,
         sigma_high: Annotated[float, {"min": 0.0}] = 1.6,
@@ -165,11 +161,10 @@ def dog_filter(model: WidgetDataModel) -> Parametric:
     menus=MENUS,
     types=[StandardType.IMAGE],
     command_id="himena-image:2-filter-comp:laplacian_filter",
+    run_async=True,
 )
 def laplacian_filter(model: WidgetDataModel) -> Parametric:
-    @configure_gui(
-        dimension={"choices": make_dims_annotation(model)}, preview=True, run_async=True
-    )
+    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
     def run_laplacian_filter(
         radius: Annotated[int, {"min": 1}] = 1,
         dimension: int = 2,
@@ -187,11 +182,10 @@ def laplacian_filter(model: WidgetDataModel) -> Parametric:
     menus=MENUS,
     types=[StandardType.IMAGE],
     command_id="himena-image:2-filter-comp:doh_filter",
+    run_async=True,
 )
 def doh_filter(model: WidgetDataModel) -> Parametric:
-    @configure_gui(
-        dimension={"choices": make_dims_annotation(model)}, preview=True, run_async=True
-    )
+    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
     def run_doh_filter(
         sigma: Annotated[float, {"min": 0.0}] = 1.0,
         dimension: int = 2,
@@ -209,11 +203,10 @@ def doh_filter(model: WidgetDataModel) -> Parametric:
     menus=MENUS,
     types=[StandardType.IMAGE],
     command_id="himena-image:2-filter-comp:log_filter",
+    run_async=True,
 )
 def log_filter(model: WidgetDataModel) -> Parametric:
-    @configure_gui(
-        dimension={"choices": make_dims_annotation(model)}, preview=True, run_async=True
-    )
+    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
     def run_log_filter(
         sigma: Annotated[float, {"min": 0.0}] = 1.0,
         dimension: int = 2,
@@ -231,13 +224,13 @@ def log_filter(model: WidgetDataModel) -> Parametric:
     menus=MENUS,
     types=[StandardType.IMAGE],
     command_id="himena-image:9-filter-other:rolling_ball",
+    run_async=True,
 )
 def rolling_ball(model: WidgetDataModel) -> Parametric:
     """Remove or create a background using the rolling-ball algorithm."""
 
     @configure_gui(
         dimension={"choices": make_dims_annotation(model)},
-        run_async=True,
     )
     def run_rolling_ball(
         radius: Annotated[float, {"min": 0.0}] = 30.0,
@@ -256,6 +249,7 @@ def rolling_ball(model: WidgetDataModel) -> Parametric:
     menus=MENUS,
     types=[StandardType.IMAGE],
     command_id="himena-image:9-filter-other:threshold",
+    run_async=True,
 )
 def threshold(model: WidgetDataModel) -> Parametric:
     """Binarize the image using a threshold value."""
@@ -281,7 +275,7 @@ def threshold(model: WidgetDataModel) -> Parametric:
         "widget_type": wdgt,
     }
 
-    @configure_gui(threshold=thresh_options, preview=True, run_async=True)
+    @configure_gui(threshold=thresh_options, preview=True)
     def run_threshold(
         threshold,
         dark_background: bool = True,
@@ -302,13 +296,12 @@ def threshold(model: WidgetDataModel) -> Parametric:
     menus=MENUS,
     types=[StandardType.IMAGE],
     command_id="himena-image:0-filter-basic:edge_filter",
+    run_async=True,
 )
 def edge_filter(model: WidgetDataModel) -> Parametric:
     """Filters for detecting edges in the image."""
 
-    @configure_gui(
-        dimension={"choices": make_dims_annotation(model)}, preview=True, run_async=True
-    )
+    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
     def run_edge_filter(
         method: Literal["sobel", "prewitt", "scharr", "farid"],
         dimension: int = 2,
@@ -326,13 +319,13 @@ def edge_filter(model: WidgetDataModel) -> Parametric:
     menus=MENUS,
     types=[StandardType.IMAGE],
     command_id="himena-image:9-filter-other:smooth_mask",
+    run_async=True,
 )
 def smooth_mask(model: WidgetDataModel) -> Parametric:
     @configure_gui(
         title="Smooth mask",
         dimension={"choices": make_dims_annotation(model)},
         preview=True,
-        run_async=True,
     )
     def run_smooth_mask(
         sigma: Annotated[float, {"min": 0.0}] = 1.0,
@@ -356,6 +349,7 @@ def smooth_mask(model: WidgetDataModel) -> Parametric:
     menus=MENUS,
     types=[StandardType.IMAGE],
     command_id="himena-image:9-filter-other:kalman_filter",
+    run_async=True,
 )
 def kalman_filter(model: WidgetDataModel) -> Parametric:
     """Denoise time-series image using the Kalman filter."""
@@ -373,7 +367,6 @@ def kalman_filter(model: WidgetDataModel) -> Parametric:
         along={"choices": along_choices, "value": along_default},
         dimension={"choices": make_dims_annotation(model)},
         preview=True,
-        run_async=True,
     )
     def run_kalman_filter(
         gain: Annotated[float, {"min": 0.0}] = 0.1,

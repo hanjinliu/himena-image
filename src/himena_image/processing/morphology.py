@@ -14,11 +14,10 @@ MENUS = ["image/morphology", "/model_menu/morphology"]
     menus=MENUS,
     types=[StandardType.IMAGE],
     command_id="himena-image:0-morph-basic:dilation",
+    run_async=True,
 )
 def dilation(model: WidgetDataModel) -> Parametric:
-    @configure_gui(
-        dimension={"choices": make_dims_annotation(model)}, preview=True, run_async=True
-    )
+    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
     def run_dilation(
         radius: Annotated[float, {"min": 0.0}] = 1.0,
         mode: PaddingMode = "reflect",
@@ -38,11 +37,10 @@ def dilation(model: WidgetDataModel) -> Parametric:
     menus=MENUS,
     types=[StandardType.IMAGE],
     command_id="himena-image:0-morph-basic:erosion",
+    run_async=True,
 )
 def erosion(model: WidgetDataModel) -> Parametric:
-    @configure_gui(
-        dimension={"choices": make_dims_annotation(model)}, preview=True, run_async=True
-    )
+    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
     def run_erosion(
         radius: Annotated[float, {"min": 0.0}] = 1.0,
         mode: PaddingMode = "reflect",
@@ -62,11 +60,10 @@ def erosion(model: WidgetDataModel) -> Parametric:
     menus=MENUS,
     types=[StandardType.IMAGE],
     command_id="himena-image:1-morph-comp:opening",
+    run_async=True,
 )
 def opening(model: WidgetDataModel) -> Parametric:
-    @configure_gui(
-        dimension={"choices": make_dims_annotation(model)}, preview=True, run_async=True
-    )
+    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
     def run_opening(
         radius: Annotated[float, {"min": 0.0}] = 1.0,
         mode: PaddingMode = "reflect",
@@ -86,11 +83,10 @@ def opening(model: WidgetDataModel) -> Parametric:
     menus=MENUS,
     types=[StandardType.IMAGE],
     command_id="himena-image:1-morph-comp:closing",
+    run_async=True,
 )
 def closing(model: WidgetDataModel) -> Parametric:
-    @configure_gui(
-        dimension={"choices": make_dims_annotation(model)}, preview=True, run_async=True
-    )
+    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
     def run_closing(
         radius: Annotated[float, {"min": 0.0}] = 1.0,
         mode: PaddingMode = "reflect",
@@ -110,11 +106,10 @@ def closing(model: WidgetDataModel) -> Parametric:
     menus=MENUS,
     types=[StandardType.IMAGE],
     command_id="himena-image:1-morph-comp:tophat",
+    run_async=True,
 )
 def tophat(model: WidgetDataModel) -> Parametric:
-    @configure_gui(
-        dimension={"choices": make_dims_annotation(model)}, preview=True, run_async=True
-    )
+    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
     def run_tophat(
         radius: Annotated[float, {"min": 0.0}] = 30.0,
         mode: PaddingMode = "reflect",
@@ -134,11 +129,10 @@ def tophat(model: WidgetDataModel) -> Parametric:
     menus=MENUS,
     types=[StandardType.IMAGE],
     command_id="himena-image:1-morph-comp:skeletonize",
+    run_async=True,
 )
 def skeletonize(model: WidgetDataModel) -> Parametric:
-    @configure_gui(
-        dimension={"choices": make_dims_annotation(model)}, preview=True, run_async=True
-    )
+    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
     def run_skeletonize(
         radius: Annotated[float, {"min": 0.0}] = 0.0,
         dimension: int = 2,
