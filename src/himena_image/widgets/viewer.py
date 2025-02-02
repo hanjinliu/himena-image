@@ -131,7 +131,7 @@ class NDImageViewer(ArrayViewer):
             type=self.model_type(),
             metadata=ImageMeta(
                 current_indices=indices,
-                axes=[ArrayAxis(name=a) for a in self.data.dims],
+                axes=[ArrayAxis(name=a) for a in self.data_wrapper.dims],
             ),
         )
 

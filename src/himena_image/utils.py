@@ -7,18 +7,26 @@ from himena.standards.model_meta import (
     ImageMeta,
     ImageChannel,
     ArrayAxis,
-    LinearCoordinates,
 )
 
 
 def image_to_model(
     img: ip.ImgArray | ip.LazyImgArray,
     title: str | None = None,
-    is_rgb: bool = False,
+    is_rgb: bool | None = None,
     orig: WidgetDataModel | None = None,
     is_previewing: bool = False,
 ) -> WidgetDataModel:
     """Convert impy image array to WidgetDataModel."""
+    # normalize is_rgb
+    if is_rgb is None and orig is not None:
+        meta = orig.metadata
+        if isinstance(meta, ImageMeta):
+            is_rgb = meta.is_rgb
+    if is_rgb is None:
+        is_rgb = False
+
+    # normalize channel info
     if "c" in img.axes and not is_rgb:
         channel_axis = img.axes.index("c")
         if channel_labels := img.axes[channel_axis].labels:
@@ -30,12 +38,7 @@ def image_to_model(
         channel_labels = [""]
     nchannels = img.shape[channel_axis] if channel_axis is not None else 1
     meta = ImageMeta(
-        axes=[
-            ArrayAxis(name=str(a)).with_linear_coords(scale=a.scale, unit=a.unit)
-            if str(a) != "c"
-            else ArrayAxis(name="c").with_categorical_coords(channel_labels)
-            for a in img.axes
-        ],
+        axes=[ArrayAxis(name=str(a), scale=a.scale, unit=a.unit) for a in img.axes],
         channel_axis=channel_axis,
         channels=[
             ImageChannel(name=channel_labels[i], contrast_limits=None)
@@ -111,7 +114,6 @@ def model_to_image(
     model: WidgetDataModel,
     is_previewing: bool = False,
 ):
-    # TODO: consider RGB images
     import dask.array as da
 
     img = model.value
@@ -122,11 +124,8 @@ def model_to_image(
         unit = {}
         axes = {}
         for a in meta.axes:
-            if isinstance(a.coords, LinearCoordinates):
-                scale[a.name] = a.coords.scale or 1
-                unit[a.name] = a.coords.unit
-            else:
-                scale[a.name] = 1
+            scale[a.name] = a.scale
+            unit[a.name] = a.unit
         axes = list(scale.keys())
     else:
         axes = None

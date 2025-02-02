@@ -96,7 +96,7 @@ def std_filter(model: WidgetDataModel) -> Parametric:
 
     @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
     def run_std_filter(
-        radius: Annotated[float, {"min": 0.0}],
+        radius: Annotated[float, {"min": 0.0}] = 1.0,
         mode: PaddingMode = "reflect",
         cval: float = 0,
         dimension: int = 2,
@@ -121,7 +121,7 @@ def coef_filter(model: WidgetDataModel) -> Parametric:
 
     @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
     def run_coef_filter(
-        radius: Annotated[float, {"min": 0.0}],
+        radius: Annotated[float, {"min": 0.0}] = 1.0,
         mode: PaddingMode = "reflect",
         cval: float = 0,
         dimension: int = 2,
@@ -229,9 +229,7 @@ def log_filter(model: WidgetDataModel) -> Parametric:
 def rolling_ball(model: WidgetDataModel) -> Parametric:
     """Remove or create a background using the rolling-ball algorithm."""
 
-    @configure_gui(
-        dimension={"choices": make_dims_annotation(model)},
-    )
+    @configure_gui(dimension={"choices": make_dims_annotation(model)})
     def run_rolling_ball(
         radius: Annotated[float, {"min": 0.0}] = 30.0,
         dimension: int = 2,
@@ -242,6 +240,48 @@ def rolling_ball(model: WidgetDataModel) -> Parametric:
         return image_to_model(out, orig=model)
 
     return run_rolling_ball
+
+
+@register_function(
+    title="Entropy filter ...",
+    menus=MENUS,
+    command_id="himena-image:9-filter-other:entropy-filter",
+    run_async=True,
+)
+def entropy_filter(model: WidgetDataModel) -> Parametric:
+    """Run entropy filter on an image."""
+
+    @configure_gui(dimension={"choices": make_dims_annotation(model)})
+    def run_entropy(
+        radius: Annotated[float, {"min": 0.0}] = 5.0,
+        dimension: int = 2,
+    ) -> WidgetDataModel:
+        img = model_to_image(model)
+        out = img.entropy_filter(radius, dims=dimension)
+        return image_to_model(out, orig=model)
+
+    return run_entropy
+
+
+@register_function(
+    title="Enhance contrast ...",
+    menus=MENUS,
+    command_id="himena-image:9-filter-other:enhance-contrast",
+    run_async=True,
+)
+def enhance_contrast(model: WidgetDataModel) -> Parametric:
+    """Run enhance-contrast filter on an image."""
+
+    @configure_gui(dimension={"choices": make_dims_annotation(model)})
+    def run_enhance_contrast(
+        radius: Annotated[float, {"min": 0.0}] = 1.0,
+        dimension: int = 2,
+    ) -> WidgetDataModel:
+        img = model_to_image(model)
+        out = img.enhance_contrast(radius, dims=dimension)
+        return image_to_model(out, orig=model)
+
+    return run_enhance_contrast
 
 
 @register_function(

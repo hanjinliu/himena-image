@@ -36,6 +36,10 @@ all = [
   "mrcfile",
   "nd2",
 ]
+testing = [
+  "pytest",
+  "pytest-cov",
+]
 
 [project.urls]
 Documentation = "https://github.com/hanjinliu/himena-image#readme"
@@ -51,6 +55,9 @@ extra-dependencies = [
 ]
 [tool.hatch.envs.types.scripts]
 check = "mypy --install-types --non-interactive {args:src/himena_image tests}"
+
+[tool.hatch.envs.test]
+features = ["testing"]
 
 [tool.coverage.run]
 source_pkgs = ["himena_image"]

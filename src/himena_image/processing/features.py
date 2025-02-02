@@ -75,6 +75,19 @@ def peak_local_max(model: WidgetDataModel) -> Parametric:
     return run_peak_local_max
 
 
+REGIONPROPS_CHOICES = [
+    "area", "area_bbox", "area_convex", "area_filled", "axis_major_length",
+    "axis_minor_length", "bbox", "centroid", "centroid_local", "centroid_weighted",
+    "centroid_weighted_local", "coords_scaled", "coords", "eccentricity",
+    "equivalent_diameter_area", "euler_number", "extent", "feret_diameter_max",
+    "image_intensity", "inertia_tensor", "inertia_tensor_eigvals", "intensity_max",
+    "intensity_mean", "intensity_min", "intensity_std", "label", "moments",
+    "moments_central", "moments_hu", "moments_normalized", "moments_weighted",
+    "moments_weighted_central", "moments_weighted_hu", "moments_weighted_normalized",
+    "num_pixels", "orientation", "perimeter", "perimeter_crofton", "solidity",
+]  # fmt: skip
+
+
 @register_function(
     title="Region Properties ...",
     menus=MENUS,
@@ -83,12 +96,15 @@ def peak_local_max(model: WidgetDataModel) -> Parametric:
     command_id="himena-image:region_properties",
 )
 def region_properties(model: WidgetDataModel) -> Parametric:
+    """Measure region properties of an image."""
+
     @configure_gui(
         labels={"types": [StandardType.IMAGE_LABELS]},
+        properties={"choices": REGIONPROPS_CHOICES, "widget_type": "Select"},
     )
     def run_region_properties(
         labels: WidgetDataModel[ip.Label],
-        properties: list[str],
+        properties: list[str] = ["intensity_mean"],
     ) -> WidgetDataModel:
         img = model_to_image(model)
         img.labels = labels.value

@@ -3,8 +3,12 @@ from typing import Annotated, Literal
 from himena import WidgetDataModel, Parametric
 from himena.consts import StandardType
 from himena.plugins import register_function, configure_gui
+from himena.standards.model_meta import ImageMeta
+from himena.standards.roi import PointRoi2D
+import numpy as np
 from himena_image.consts import PaddingMode, InterpolationOrder
 from himena_image.utils import make_dims_annotation, image_to_model, model_to_image
+from himena_image._mgui_widgets import PointEdit
 
 MENUS = ["image/transform", "/model_menu/transform"]
 
@@ -148,48 +152,59 @@ def bin(model: WidgetDataModel) -> Parametric:
 
 
 @register_function(
-    title="Drift correction ...",
+    title="Radial profile ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:drift_correction",
+    command_id="himena-image:radial_profile",
     run_async=True,
 )
-def drift_correction(model: WidgetDataModel) -> Parametric:
-    """Correct drift in the image."""
-    img = model_to_image(model)
-    along_choices = [str(a) for a in img.axes]
-    if "t" in along_choices:
-        along_default = "t"
-    elif "z" in along_choices:
-        along_default = "z"
-    else:
-        along_default = along_choices[0]
+def radial_profile(model: WidgetDataModel) -> Parametric:
+    def _point_getter(widget):
+        if not isinstance(meta := model.metadata, ImageMeta):
+            return None
+        if not isinstance(roi := meta.current_roi, PointRoi2D):
+            return None
+        return roi.x, roi.y
 
     @configure_gui(
-        along={"choices": along_choices, "value": along_default},
+        center={"widget_type": PointEdit, "getter": _point_getter},
         dimension={"choices": make_dims_annotation(model)},
     )
-    def run_drift_correction(
-        along: str,
-        reference: str = "",
-        zero_ave: bool = True,
-        max_shift: float | None = None,
-        order: InterpolationOrder = 1,
-        mode: PaddingMode = "constant",
-        cval: float = 0.0,
+    def run_radial_profile(
+        center: tuple[float, float] | None = None,
+        method: Literal["mean", "min", "std", "max"] = "mean",
         dimension: int = 2,
     ) -> WidgetDataModel:
         img = model_to_image(model)
-        out = img.drift_correction(
-            ref=reference or None,
-            zero_ave=zero_ave,
-            along=along,
-            max_shift=max_shift,
-            mode=mode,
-            cval=cval,
-            order=order,
-            dims=dimension,
-        )
+        out = img.radial_profile(center=center, method=method, dims=dimension)
         return image_to_model(out, orig=model)
 
-    return run_drift_correction
+    return run_radial_profile
+
+
+@register_function(
+    title="Unmix multi-channel image ...",
+    menus=MENUS,
+    types=[StandardType.IMAGE],
+    command_id="himena-image:transform-color:unmix",
+)
+def unmix(model: WidgetDataModel):
+    """Run unmixing of fluorescence leakage between channels."""
+
+    @configure_gui(
+        matrix={"types": [StandardType.ARRAY, StandardType.TABLE]},
+        dimension={"choices": make_dims_annotation(model)},
+    )
+    def run_unmix(
+        matrix: WidgetDataModel,
+        background: list[float] | None = None,
+    ) -> WidgetDataModel:
+        if matrix.type == StandardType.ARRAY:
+            matrix = matrix.value
+        else:
+            matrix = np.asarray(matrix.value).astype(np.float64)
+        img = model_to_image(model)
+        out = img.unmix(matrix, bg=background)
+        return image_to_model(out, orig=model)
+
+    return run_unmix

@@ -37,7 +37,7 @@ def read_image(path: Path):
     return model
 
 
-@read_image.mark_matcher
+@read_image.define_matcher
 def _(path: Path):
     if path.suffix in _SUPPORTED_EXT:
         return StandardType.IMAGE
@@ -64,7 +64,7 @@ def write_image(model: WidgetDataModel, path: Path):
     return img.imsave(path)
 
 
-@write_image.mark_matcher
+@write_image.define_matcher
 def _(model: WidgetDataModel, path: Path):
     return model.is_subtype_of(StandardType.ARRAY) and path.suffix in _SUPPORTED_EXT
 
@@ -79,7 +79,7 @@ def read_image_as_labels(path: Path):
     return model
 
 
-@read_image_as_labels.mark_matcher
+@read_image_as_labels.define_matcher
 def _(path: Path):
     if path.suffix in _SUPPORTED_EXT:
         return StandardType.IMAGE_LABELS
@@ -105,7 +105,7 @@ def read_roi(path: Path):
     return WidgetDataModel(value=val, type=StandardType.ROIS, title=path.name)
 
 
-@read_roi.mark_matcher
+@read_roi.define_matcher
 def _(path: Path):
     ext = "".join(path.suffixes)
     if ext == ".roi":
@@ -142,7 +142,7 @@ def write_roi(model: WidgetDataModel, path: Path):
     return None
 
 
-@write_roi.mark_matcher
+@write_roi.define_matcher
 def _(model: WidgetDataModel, path: Path):
     return model.is_subtype_of(StandardType.ROIS) and path.suffix == ".zip"
 
