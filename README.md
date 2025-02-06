@@ -2,6 +2,7 @@
 
 [![PyPI - Version](https://img.shields.io/pypi/v/himena-image.svg)](https://pypi.org/project/himena-image)
 [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/himena-image.svg)](https://pypi.org/project/himena-image)
+[![codecov](https://codecov.io/gh/hanjinliu/himena-image/graph/badge.svg?token=Eifn4N21SV)](https://codecov.io/gh/hanjinliu/himena-image)
 
 -----
 
