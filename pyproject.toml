@@ -59,6 +59,9 @@ check = "mypy --install-types --non-interactive {args:src/himena_image tests}"
 [tool.hatch.envs.test]
 features = ["testing"]
 
+[tool.hatch.envs.test.scripts]
+run = "pytest -v --cov --cov-report=xml"
+
 [tool.coverage.run]
 source_pkgs = ["himena_image"]
 branch = true

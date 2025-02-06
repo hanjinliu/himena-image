@@ -113,6 +113,8 @@ class NDImageViewer(ArrayViewer):
         self._complex_conversion_rule_cbox.setVisible(is_complex)
         meta = model.metadata
         if isinstance(meta, ImageMeta):
+            if meta.is_rgb:
+                raise ValueError("RGB images are not supported yet")
             for ch, lut in zip(meta.channels, self.display_model.luts.values()):
                 lut.cmap = ch.colormap or "gray"
                 lut.clims = ch.contrast_limits
