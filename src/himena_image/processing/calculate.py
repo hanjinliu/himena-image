@@ -95,7 +95,7 @@ def profile_line(model: WidgetDataModel) -> Parametric:
         if sliced.ndim == 2:  # multi-channel
             sliced_arrays = [sliced[i] for i in range(sliced.shape[0])]
             slice_headers = [
-                _channed_name(ch.name, i) for i, ch in enumerate(meta.channels)
+                _channed_name(axis.name, i) for i, axis in enumerate(meta.axes)
             ]
         elif sliced.ndim == 1:
             sliced_arrays = [sliced]
