@@ -5,7 +5,6 @@ import impy as ip
 from himena.consts import StandardType
 from himena.standards.model_meta import (
     ImageMeta,
-    ImageChannel,
     ArrayAxis,
 )
 
@@ -29,21 +28,19 @@ def image_to_model(
     # normalize channel info
     if "c" in img.axes and not is_rgb:
         channel_axis = img.axes.index("c")
-        if channel_labels := img.axes[channel_axis].labels:
-            channel_labels = [str(name) for name in channel_labels]
-        else:
-            channel_labels = [f"Ch-{i}" for i in range(img.shape[channel_axis])]
     else:
         channel_axis = None
-        channel_labels = [""]
-    nchannels = img.shape[channel_axis] if channel_axis is not None else 1
     meta = ImageMeta(
-        axes=[ArrayAxis(name=str(a), scale=a.scale, unit=a.unit) for a in img.axes],
-        channel_axis=channel_axis,
-        channels=[
-            ImageChannel(name=channel_labels[i], contrast_limits=None)
-            for i in range(nchannels)
+        axes=[
+            ArrayAxis(
+                name=str(a),
+                scale=a.scale,
+                unit=a.unit,
+                default_label_format="Ch-{:s}" if str(a) == "c" else "{:s}",
+            )
+            for a in img.axes
         ],
+        channel_axis=channel_axis,
         is_rgb=is_rgb,
     )
     if orig:
