@@ -74,22 +74,22 @@ def label_to_model(
 
 def make_dims_annotation(model: WidgetDataModel) -> list[tuple[str, int]]:
     if not isinstance(meta := model.metadata, ImageMeta):
-        return [("2 (xy)", 2)]
+        return [("2 (yx)", "yx")]
     elif (axes := meta.axes) is None:
-        return [("2 (xy)", 2)]
+        return [("2 (yx)", "yx")]
     axis_names = [a.name for a in axes]
     if "z" in axis_names and "y" in axis_names and "x" in axis_names:
-        choices = [("2 (xy)", 2), ("3 (xyz)", 3)]
+        choices = [("2 (yx)", "yx"), ("3 (zyx)", "zyx")]
     elif "y" in axis_names and "x" in axis_names:
-        choices = [("2 (xy)", 2)]
+        choices = [("2 (yx)", "yx")]
     elif len(axis_names) > 1:
         if len(axis_names[-1]) == len(axis_names[-2]) == 1:
             label = "".join(axis_names[-2:])
         else:
             label = ", ".join(axis_names[-2:])
-        choices = [(f"2 ({label})", 2)]
+        choices = [(f"2 ({label})", label)]
     else:
-        choices = [("2 (xy)", 2)]
+        choices = [("2 (yx)", "yx")]
     return choices
 
 
