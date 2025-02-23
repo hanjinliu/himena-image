@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Literal, overload
+from typing import Literal, Sequence, overload
 from himena import WidgetDataModel
 import impy as ip
 from himena.consts import StandardType
@@ -74,23 +74,36 @@ def label_to_model(
 
 def make_dims_annotation(model: WidgetDataModel) -> list[tuple[str, int]]:
     if not isinstance(meta := model.metadata, ImageMeta):
-        return [("2 (yx)", "yx")]
+        return [("2 (yx)", 2)]
     elif (axes := meta.axes) is None:
-        return [("2 (yx)", "yx")]
+        return [("2 (yx)", 2)]
     axis_names = [a.name for a in axes]
     if "z" in axis_names and "y" in axis_names and "x" in axis_names:
-        choices = [("2 (yx)", "yx"), ("3 (zyx)", "zyx")]
+        choices = [("2 (yx)", 2), ("3 (zyx)", 3)]
     elif "y" in axis_names and "x" in axis_names:
-        choices = [("2 (yx)", "yx")]
+        choices = [("2 (yx)", 2)]
     elif len(axis_names) > 1:
         if len(axis_names[-1]) == len(axis_names[-2]) == 1:
             label = "".join(axis_names[-2:])
         else:
             label = ", ".join(axis_names[-2:])
-        choices = [(f"2 ({label})", label)]
+        choices = [(f"2 ({label})", 2)]
     else:
-        choices = [("2 (yx)", "yx")]
+        choices = [("2 (yx)", 2)]
     return choices
+
+
+def norm_dims(dims: int, axes) -> Sequence[str]:
+    if dims == 2:
+        if "x" in axes and "y" in axes:
+            return "yx"
+        else:
+            return [str(axes[-2]), str(axes[-1])]
+    elif dims == 3:
+        if "x" in axes and "y" in axes and "z" in axes:
+            return "zyx"
+        else:
+            return [str(axes[-3]), str(axes[-2]), str(axes[-1])]
 
 
 @overload

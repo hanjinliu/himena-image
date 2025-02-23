@@ -6,6 +6,7 @@ from himena_image.utils import (
     label_to_model,
     make_dims_annotation,
     model_to_image,
+    norm_dims,
 )
 
 MENUS = ["image/features", "/model_menu/features"]
@@ -28,7 +29,7 @@ def label(model: WidgetDataModel) -> Parametric:
         dimension: int = 2,
     ) -> WidgetDataModel[ip.Label]:
         img = model_to_image(model)
-        out = img.label(connectivity=connectivity, dims=dimension)
+        out = img.label(connectivity=connectivity, dims=norm_dims(dimension, img.axes))
         return label_to_model(out, orig=model)
 
     return run_label
@@ -65,7 +66,7 @@ def peak_local_max(model: WidgetDataModel) -> Parametric:
             topn_per_label=topn_per_label or float("inf"),
             exclude_border=exclude_border,
             use_labels=labels is not None,
-            dims=dimension,
+            dims=norm_dims(dimension, img.axes),
         )
         df = {k: out[k].to_numpy() for k in out.columns}
         return WidgetDataModel(
