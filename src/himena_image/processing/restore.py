@@ -2,7 +2,12 @@ from himena import WidgetDataModel, Parametric
 from himena.consts import StandardType
 from himena.plugins import register_function, configure_gui
 from himena_image.consts import PaddingMode, InterpolationOrder
-from himena_image.utils import make_dims_annotation, image_to_model, model_to_image
+from himena_image.utils import (
+    make_dims_annotation,
+    image_to_model,
+    model_to_image,
+    norm_dims,
+)
 
 MENUS = ["image/restore", "/model_menu/restore"]
 
@@ -48,7 +53,7 @@ def drift_correction(model: WidgetDataModel) -> Parametric:
             mode=mode,
             cval=cval,
             order=order,
-            dims=dimension,
+            dims=norm_dims(dimension, img.axes),
         )
         return image_to_model(out, orig=model)
 
@@ -76,7 +81,7 @@ def lucy(model: WidgetDataModel) -> Parametric:
         eps: float = 1e-5,
     ) -> WidgetDataModel:
         img = model_to_image(model)
-        out = img.lucy(psf, niter=niter, eps=eps, dims=dimension)
+        out = img.lucy(psf, niter=niter, eps=eps, dims=norm_dims(dimension, img.axes))
         return image_to_model(out, orig=model)
 
     return run_lucy
@@ -106,7 +111,14 @@ def lucy_tv(model: WidgetDataModel) -> Parametric:
         eps: float = 1e-5,
     ) -> WidgetDataModel:
         img = model_to_image(model)
-        out = img.lucy_tv(psf, niter=niter, lmd=lmd, tol=tol, eps=eps, dims=dimension)
+        out = img.lucy_tv(
+            psf,
+            niter=niter,
+            lmd=lmd,
+            tol=tol,
+            eps=eps,
+            dims=norm_dims(dimension, img.axe),
+        )
         return image_to_model(out, orig=model)
 
     return run_lucy_tv
