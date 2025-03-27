@@ -6,9 +6,14 @@ from himena.consts import StandardType
 from himena.plugins import register_function, configure_gui
 from himena.standards.model_meta import ImageMeta
 from himena_image.consts import PaddingMode
-from himena_image.utils import make_dims_annotation, model_to_image, image_to_model
+from himena_image.utils import (
+    make_dims_annotation,
+    model_to_image,
+    image_to_model,
+    norm_dims,
+)
 
-MENUS = ["image/filter", "/model_menu/filter"]
+MENUS = ["image/analyze/filter", "/model_menu/analyze/filter"]
 
 
 @register_function(
@@ -29,7 +34,7 @@ def gaussian_filter(model: WidgetDataModel) -> Parametric:
         is_previewing: bool = False,
     ) -> WidgetDataModel:
         img = model_to_image(model, is_previewing)
-        out = img.gaussian_filter(sigma=sigma, dims=dimension)
+        out = img.gaussian_filter(sigma=sigma, dims=norm_dims(dimension, img.axes))
         return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_gaussian_filter
@@ -55,7 +60,9 @@ def median_filter(model: WidgetDataModel) -> Parametric:
         is_previewing: bool = False,
     ) -> WidgetDataModel:
         img = model_to_image(model, is_previewing)
-        out = img.median_filter(radius, mode=mode, cval=cval, dims=dimension)
+        out = img.median_filter(
+            radius, mode=mode, cval=cval, dims=norm_dims(dimension, img.axes)
+        )
         return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_median_filter
@@ -78,7 +85,9 @@ def mean_filter(model: WidgetDataModel) -> Parametric:
         is_previewing: bool = False,
     ) -> WidgetDataModel:
         img = model_to_image(model, is_previewing)
-        out = img.mean_filter(radius, mode=mode, cval=cval, dims=dimension)
+        out = img.mean_filter(
+            radius, mode=mode, cval=cval, dims=norm_dims(dimension, img.axes)
+        )
         return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_mean_filter
@@ -103,7 +112,9 @@ def std_filter(model: WidgetDataModel) -> Parametric:
         is_previewing: bool = False,
     ) -> WidgetDataModel:
         img = model_to_image(model, is_previewing)
-        out = img.std_filter(radius, mode=mode, cval=cval, dims=dimension)
+        out = img.std_filter(
+            radius, mode=mode, cval=cval, dims=norm_dims(dimension, img.axes)
+        )
         return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_std_filter
@@ -128,7 +139,9 @@ def coef_filter(model: WidgetDataModel) -> Parametric:
         is_previewing: bool = False,
     ) -> WidgetDataModel:
         img = model_to_image(model, is_previewing)
-        out = img.coef_filter(radius, mode=mode, cval=cval, dims=dimension)
+        out = img.coef_filter(
+            radius, mode=mode, cval=cval, dims=norm_dims(dimension, img.axes)
+        )
         return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_coef_filter
@@ -150,7 +163,7 @@ def dog_filter(model: WidgetDataModel) -> Parametric:
         is_previewing: bool = False,
     ) -> WidgetDataModel:
         img = model_to_image(model, is_previewing)
-        out = img.dog_filter(sigma_low, sigma_high, dims=dimension)
+        out = img.dog_filter(sigma_low, sigma_high, dims=norm_dims(dimension, img.axes))
         return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_dog_filter
@@ -171,7 +184,7 @@ def laplacian_filter(model: WidgetDataModel) -> Parametric:
         is_previewing: bool = False,
     ) -> WidgetDataModel:
         img = model_to_image(model, is_previewing)
-        out = img.laplacian_filter(radius=radius, dims=dimension)
+        out = img.laplacian_filter(radius=radius, dims=norm_dims(dimension, img.axes))
         return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_laplacian_filter
@@ -192,7 +205,7 @@ def doh_filter(model: WidgetDataModel) -> Parametric:
         is_previewing: bool = False,
     ) -> WidgetDataModel:
         img = model_to_image(model, is_previewing)
-        out = img.doh_filter(sigma, dims=dimension)
+        out = img.doh_filter(sigma, dims=norm_dims(dimension, img.axes))
         return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_doh_filter
@@ -213,7 +226,7 @@ def log_filter(model: WidgetDataModel) -> Parametric:
         is_previewing: bool = False,
     ) -> WidgetDataModel:
         img = model_to_image(model, is_previewing)
-        out = img.log_filter(sigma, dims=dimension)
+        out = img.log_filter(sigma, dims=norm_dims(dimension, img.axes))
         return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_log_filter
@@ -236,7 +249,9 @@ def rolling_ball(model: WidgetDataModel) -> Parametric:
         return_background: bool = False,
     ) -> WidgetDataModel:
         img = model_to_image(model)
-        out = img.rolling_ball(radius, return_bg=return_background, dims=dimension)
+        out = img.rolling_ball(
+            radius, return_bg=return_background, dims=norm_dims(dimension, img.axes)
+        )
         return image_to_model(out, orig=model)
 
     return run_rolling_ball
@@ -257,7 +272,7 @@ def entropy_filter(model: WidgetDataModel) -> Parametric:
         dimension: int = 2,
     ) -> WidgetDataModel:
         img = model_to_image(model)
-        out = img.entropy_filter(radius, dims=dimension)
+        out = img.entropy_filter(radius, dims=norm_dims(dimension, img.axes))
         return image_to_model(out, orig=model)
 
     return run_entropy
@@ -278,7 +293,7 @@ def enhance_contrast(model: WidgetDataModel) -> Parametric:
         dimension: int = 2,
     ) -> WidgetDataModel:
         img = model_to_image(model)
-        out = img.enhance_contrast(radius, dims=dimension)
+        out = img.enhance_contrast(radius, dims=norm_dims(dimension, img.axes))
         return image_to_model(out, orig=model)
 
     return run_enhance_contrast
@@ -348,7 +363,7 @@ def edge_filter(model: WidgetDataModel) -> Parametric:
         is_previewing: bool = False,
     ) -> WidgetDataModel:
         img = model_to_image(model, is_previewing)
-        out = img.edge_filter(method, dims=dimension)
+        out = img.edge_filter(method, dims=norm_dims(dimension, img.axes))
         return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_edge_filter
@@ -373,11 +388,12 @@ def smooth_mask(model: WidgetDataModel) -> Parametric:
         dark_background: bool = True,
         dimension: int = 2,
     ) -> WidgetDataModel:
-        out = model_to_image(model).smooth_mask(
+        img = model_to_image(model)
+        out = img.smooth_mask(
             sigma=sigma,
             dilate_radius=dilate_radius,
             mask_light=not dark_background,
-            dims=dimension,
+            dims=norm_dims(dimension, img.axes),
         )
         return image_to_model(out, orig=model)
 
@@ -417,7 +433,7 @@ def kalman_filter(model: WidgetDataModel) -> Parametric:
         out = model_to_image(model).kalman_filter(
             gain=gain,
             noise_var=noise_var,
-            dims=dimension,
+            dims=norm_dims(dimension, img.axes),
             along=along,
         )
         return image_to_model(out, orig=model)

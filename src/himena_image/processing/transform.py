@@ -7,10 +7,15 @@ from himena.standards.model_meta import ImageMeta
 from himena.standards.roi import PointRoi2D
 import numpy as np
 from himena_image.consts import PaddingMode, InterpolationOrder
-from himena_image.utils import make_dims_annotation, image_to_model, model_to_image
+from himena_image.utils import (
+    make_dims_annotation,
+    image_to_model,
+    model_to_image,
+    norm_dims,
+)
 from himena_image._mgui_widgets import PointEdit
 
-MENUS = ["image/transform", "/model_menu/transform"]
+MENUS = ["image/analyze/transform", "/model_menu/analyze/transform"]
 
 
 @register_function(
@@ -43,7 +48,7 @@ def shift(model: WidgetDataModel) -> Parametric:
         is_previewing: bool = False,
     ) -> WidgetDataModel:
         img = model_to_image(model, is_previewing)
-        out = img.shift(shift, mode=mode, cval=cval, dims=2)
+        out = img.shift(shift, mode=mode, cval=cval, dims=norm_dims(2, img.axes))
         return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_shift
@@ -82,7 +87,7 @@ def rotate(model: WidgetDataModel) -> Parametric:
     run_async=True,
 )
 def flip(model: WidgetDataModel) -> Parametric:
-    @configure_gui(preview=True, dimension={"choices": make_dims_annotation(model)})
+    @configure_gui(preview=True)
     def run_flip(
         axis: str,
         is_previewing: bool = False,
@@ -122,7 +127,7 @@ def zoom(model: WidgetDataModel) -> Parametric:
             mode=mode,
             cval=cval,
             same_shape=same_shape,
-            dims=dimension,
+            dims=norm_dims(dimension, img.axes),
         )
         return image_to_model(out, orig=model, is_previewing=is_previewing)
 
@@ -145,7 +150,12 @@ def bin(model: WidgetDataModel) -> Parametric:
         is_previewing: bool = False,
     ) -> WidgetDataModel:
         img = model_to_image(model, is_previewing)
-        out = img.binning(bin_size, method=method, check_edges=False, dims=dimension)
+        out = img.binning(
+            bin_size,
+            method=method,
+            check_edges=False,
+            dims=norm_dims(dimension, img.axes),
+        )
         return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_bin
@@ -176,7 +186,9 @@ def radial_profile(model: WidgetDataModel) -> Parametric:
         dimension: int = 2,
     ) -> WidgetDataModel:
         img = model_to_image(model)
-        out = img.radial_profile(center=center, method=method, dims=dimension)
+        out = img.radial_profile(
+            center=center, method=method, dims=norm_dims(dimension, img.axes)
+        )
         return image_to_model(out, orig=model)
 
     return run_radial_profile

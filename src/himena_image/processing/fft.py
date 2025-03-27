@@ -1,12 +1,16 @@
 from himena import WidgetDataModel, Parametric
 from himena.plugins import register_function, configure_gui, configure_submenu
-from himena_image.utils import make_dims_annotation, image_to_model, model_to_image
+from himena_image.utils import (
+    make_dims_annotation,
+    image_to_model,
+    model_to_image,
+    norm_dims,
+)
 from himena.consts import StandardType
 
-MENUS = ["image/fft", "/model_menu/fft"]
+MENUS = ["image/analyze/fft", "/model_menu/analyze/fft"]
 
-configure_submenu("image/fft", title="Fourier transform")
-configure_submenu("/model_menu/fft", title="Fourier transform")
+configure_submenu(MENUS, title="Fourier transform")
 
 
 @register_function(
@@ -30,7 +34,7 @@ def fft(model: WidgetDataModel) -> Parametric:
         out = img.fft(
             shift=origin_in_center,
             double_precision=double_precision,
-            dims=dimension,
+            dims=norm_dims(dimension, img.axes),
         )
         return image_to_model(out, orig=model, is_previewing=is_previewing)
 
@@ -63,7 +67,7 @@ def ifft(model: WidgetDataModel) -> Parametric:
             real=return_real,
             shift=origin_in_center,
             double_precision=double_precision,
-            dims=dimension,
+            dims=norm_dims(dimension, img.axes),
         )
         return image_to_model(out, orig=model, is_previewing=is_previewing)
 
@@ -98,7 +102,7 @@ def power_spectrum(model: WidgetDataModel) -> Parametric:
             double_precision=double_precision,
             norm=norm,
             zero_norm=zero_norm,
-            dims=dimension,
+            dims=norm_dims(dimension, img.axes),
         )
         return image_to_model(out, orig=model, is_previewing=is_previewing)
 
@@ -126,7 +130,9 @@ def lowpass_filter(model: WidgetDataModel) -> Parametric:
         is_previewing: bool = False,
     ) -> WidgetDataModel:
         img = model_to_image(model)
-        out = img.lowpass_filter(cutoff=cutoff, order=order, dims=dimension)
+        out = img.lowpass_filter(
+            cutoff=cutoff, order=order, dims=norm_dims(dimension, img.axes)
+        )
         return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_lowpass_filter
@@ -153,7 +159,11 @@ def highpass_filter(model: WidgetDataModel) -> Parametric:
         is_previewing: bool = False,
     ) -> WidgetDataModel:
         img = model_to_image(model)
-        out = img.highpass_filter(cutoff=cutoff, order=order, dims=dimension)
+        out = img.highpass_filter(
+            cutoff=cutoff,
+            order=order,
+            dims=norm_dims(dimension, img.axes),
+        )
         return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_highpass_filter
@@ -182,7 +192,10 @@ def bandpass_filter(model: WidgetDataModel) -> Parametric:
     ) -> WidgetDataModel:
         img = model_to_image(model)
         out = img.bandpass_filter(
-            cuton=cuton, cutoff=cutoff, order=order, dims=dimension
+            cuton=cuton,
+            cutoff=cutoff,
+            order=order,
+            dims=norm_dims(dimension, img.axes),
         )
         return image_to_model(out, orig=model, is_previewing=is_previewing)
 

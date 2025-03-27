@@ -4,9 +4,14 @@ from himena import WidgetDataModel, Parametric
 from himena.consts import StandardType
 from himena.plugins import register_function, configure_gui
 from himena_image.consts import PaddingMode
-from himena_image.utils import make_dims_annotation, image_to_model, model_to_image
+from himena_image.utils import (
+    make_dims_annotation,
+    image_to_model,
+    model_to_image,
+    norm_dims,
+)
 
-MENUS = ["image/morphology", "/model_menu/morphology"]
+MENUS = ["image/analyze/morphology", "/model_menu/analyze/morphology"]
 
 
 @register_function(
@@ -26,7 +31,9 @@ def dilation(model: WidgetDataModel) -> Parametric:
         is_previewing: bool = False,
     ) -> WidgetDataModel:
         img = model_to_image(model, is_previewing)
-        out = img.dilation(radius, mode=mode, cval=cval, dims=dimension)
+        out = img.dilation(
+            radius, mode=mode, cval=cval, dims=norm_dims(dimension, img.axes)
+        )
         return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_dilation
@@ -49,7 +56,9 @@ def erosion(model: WidgetDataModel) -> Parametric:
         is_previewing: bool = False,
     ) -> WidgetDataModel:
         img = model_to_image(model, is_previewing)
-        out = img.erosion(radius, mode=mode, cval=cval, dims=dimension)
+        out = img.erosion(
+            radius, mode=mode, cval=cval, dims=norm_dims(dimension, img.axes)
+        )
         return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_erosion
@@ -72,7 +81,9 @@ def opening(model: WidgetDataModel) -> Parametric:
         is_previewing: bool = False,
     ) -> WidgetDataModel:
         img = model_to_image(model, is_previewing)
-        out = img.opening(radius, mode=mode, cval=cval, dims=dimension)
+        out = img.opening(
+            radius, mode=mode, cval=cval, dims=norm_dims(dimension, img.axes)
+        )
         return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_opening
@@ -95,7 +106,9 @@ def closing(model: WidgetDataModel) -> Parametric:
         is_previewing: bool = False,
     ) -> WidgetDataModel:
         img = model_to_image(model, is_previewing)
-        out = img.closing(radius, mode=mode, cval=cval, dims=dimension)
+        out = img.closing(
+            radius, mode=mode, cval=cval, dims=norm_dims(dimension, img.axes)
+        )
         return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_closing
@@ -118,7 +131,9 @@ def tophat(model: WidgetDataModel) -> Parametric:
         is_previewing: bool = False,
     ) -> WidgetDataModel:
         img = model_to_image(model, is_previewing)
-        out = img.tophat(radius, mode=mode, cval=cval, dims=dimension)
+        out = img.tophat(
+            radius, mode=mode, cval=cval, dims=norm_dims(dimension, img.axes)
+        )
         return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_tophat
@@ -139,7 +154,7 @@ def skeletonize(model: WidgetDataModel) -> Parametric:
         is_previewing: bool = False,
     ) -> WidgetDataModel:
         img = model_to_image(model, is_previewing)
-        out = img.skeletonize(radius=radius, dims=dimension)
+        out = img.skeletonize(radius=radius, dims=norm_dims(dimension, img.axes))
         return image_to_model(out, orig=model, is_previewing=is_previewing)
 
     return run_skeletonize

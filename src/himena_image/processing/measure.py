@@ -6,6 +6,7 @@ from numpy.typing import NDArray
 from scipy import ndimage as ndi
 
 from himena import WidgetDataModel, Parametric, StandardType
+from himena.consts import MenuId
 from himena.plugins import register_function, configure_gui
 from himena.standards import roi, model_meta
 from himena.data_wrappers import wrap_array
@@ -13,6 +14,7 @@ from himena.data_wrappers import wrap_array
 
 @singledispatch
 def slice_array(r: roi.RoiModel, arr_nd: np.ndarray):
+    """Transfrom array from (N, ..., Y, X) to (N, ..., S) where S is the number of pixels in the ROI."""
     mask = r.to_mask(arr_nd.shape)
     return arr_nd[..., mask]
 
@@ -59,8 +61,8 @@ def _(r: roi.SegmentedLineRoi, arr_nd: np.ndarray):
 
 
 def _slice_array_along_line(arr_nd: NDArray[np.number], xs, ys):
-    coords = np.stack([ys, xs], axis=1)
-    out = np.empty(arr_nd.shape[:-2] + (coords.shape[0],), dtype=np.float32)
+    coords = np.stack([ys, xs], axis=0)
+    out = np.empty(arr_nd.shape[:-2] + (coords.shape[1],), dtype=np.float32)
     for sl in np.ndindex(arr_nd.shape[:-2]):
         arr_2d = arr_nd[sl]
         out[sl] = ndi.map_coordinates(arr_2d, coords, order=1, mode="nearest")
@@ -70,7 +72,7 @@ def _slice_array_along_line(arr_nd: NDArray[np.number], xs, ys):
 @register_function(
     title="Measure ROIs ...",
     types=StandardType.IMAGE,
-    menus=["tools/image/roi", "/model_menu/roi"],
+    menus=[MenuId.TOOLS_IMAGE_ROI, "/model_menu/roi"],
     run_async=True,
     command_id="himena-image:roi-measure",
 )

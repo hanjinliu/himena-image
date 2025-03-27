@@ -11,7 +11,7 @@ from himena.standards.model_meta import ImageMeta, DataFramePlotMeta
 from himena.standards import roi
 from himena_image.utils import image_to_model, model_to_image
 
-MENU = "image/calculate"
+MENU = ["image/calculate", "/model_menu/calculate"]
 
 
 @register_function(
@@ -134,34 +134,48 @@ def kymograph(model: WidgetDataModel) -> Parametric:
         raise ValueError("`current_indices` is missing in the image metadata")
     if meta.axes is None:
         raise ValueError("`axes` is missing in the image metadata")
-    axes_names = [axis.name for axis in meta.axes]
+    along_choices = [axis.name for axis in meta.axes]
+    stack_over_choices = along_choices.copy()
+    stack_over_default = []
     if meta.channel_axis is not None:
-        axes_names.pop(meta.channel_axis)
-    axes_names = axes_names[:-2]  # remove xy
+        along_choices.pop(meta.channel_axis)
+        stack_over_default.append(stack_over_choices[meta.channel_axis])
+    along_choices = along_choices[:-2]  # remove xy
+    stack_over_choices = stack_over_choices[:-2]  # remove xy
 
     @configure_gui(
         coords={"bind": _get_profile_coords(meta)},
-        along={"choices": axes_names},
+        along={"choices": along_choices},
+        stack_over={
+            "choices": stack_over_choices,
+            "widget_type": "Select",
+            "value": stack_over_default,
+        },
     )
     def run_kymograph(
         coords,
         along: str,
+        stack_over: list[str],
     ) -> WidgetDataModel:
+        if along in stack_over:
+            raise ValueError("Duplicated axis name in `along` and `stack_over`.")
         img = model_to_image(model)
         # NOTE: ImgArray supports __getitem__ with dict
         sl: dict[str, int] = {}
         for i, axis in enumerate(img.axes):
-            if str(axis) == along:
+            axis = str(axis)
+            if axis == along or axis in stack_over:
                 continue
             if not hasattr(meta.current_indices[i], "__index__"):
                 continue
-            sl[str(axis)] = meta.current_indices[i]
+            sl[axis] = meta.current_indices[i]
         if sl:
             img_slice = img[sl]
         else:
             img_slice = img
         order = 0 if img.dtype.kind == "b" else 3
         sliced = ip.asarray(img_slice.reslice(coords, order=order))
+        sliced = np.swapaxes(sliced, along, -2)
         return image_to_model(sliced, title=f"Kymograph of {model.title}")
 
     return run_kymograph
