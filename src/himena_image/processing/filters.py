@@ -13,7 +13,7 @@ from himena_image.utils import (
     norm_dims,
 )
 
-MENUS = ["image/filter", "/model_menu/filter"]
+MENUS = ["image/analyze/filter", "/model_menu/analyze/filter"]
 
 
 @register_function(

@@ -11,7 +11,7 @@ from himena.standards.model_meta import ImageMeta, DataFramePlotMeta
 from himena.standards import roi
 from himena_image.utils import image_to_model, model_to_image
 
-MENU = "image/calculate"
+MENU = ["image/calculate", "/model_menu/calculate"]
 
 
 @register_function(

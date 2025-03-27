@@ -8,10 +8,9 @@ from himena_image.utils import (
 )
 from himena.consts import StandardType
 
-MENUS = ["image/fft", "/model_menu/fft"]
+MENUS = ["image/analyze/fft", "/model_menu/analyze/fft"]
 
-configure_submenu("image/fft", title="Fourier transform")
-configure_submenu("/model_menu/fft", title="Fourier transform")
+configure_submenu(MENUS, title="Fourier transform")
 
 
 @register_function(

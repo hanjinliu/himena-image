@@ -9,7 +9,7 @@ from himena_image.utils import (
     norm_dims,
 )
 
-MENUS = ["image/features", "/model_menu/features"]
+MENUS = ["image/analyze/features", "/model_menu/analyze/features"]
 
 
 @register_function(

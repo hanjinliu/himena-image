@@ -15,7 +15,7 @@ from himena_image.utils import (
 )
 from himena_image._mgui_widgets import PointEdit
 
-MENUS = ["image/transform", "/model_menu/transform"]
+MENUS = ["image/analyze/transform", "/model_menu/analyze/transform"]
 
 
 @register_function(
