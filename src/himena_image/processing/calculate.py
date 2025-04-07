@@ -4,9 +4,8 @@ from cmap import Colormap
 import numpy as np
 import impy as ip
 
-from himena import WidgetDataModel, Parametric
+from himena import WidgetDataModel, Parametric, StandardType
 from himena.plugins import register_function, configure_gui
-from himena.consts import StandardType
 from himena.standards.model_meta import ImageMeta, DataFramePlotMeta
 from himena.standards import roi
 from himena_image.utils import image_to_model, model_to_image
@@ -37,7 +36,8 @@ def projection(model: WidgetDataModel) -> Parametric:
     )
     def run_projection(
         axis: str,
-        method: Literal["mean", "max", "min", "sum", "std"],
+        method: Literal["mean", "median", "max", "min", "sum", "std"],
+        range: tuple[int, int],
     ) -> WidgetDataModel:
         img = model_to_image(model)
         out = img.proj(axis=axis, method=method)
@@ -151,11 +151,13 @@ def kymograph(model: WidgetDataModel) -> Parametric:
             "widget_type": "Select",
             "value": stack_over_default,
         },
+        same_dtype={"label": "Keep same data type"},
     )
     def run_kymograph(
         coords,
         along: str,
         stack_over: list[str],
+        same_dtype: bool = True,
     ) -> WidgetDataModel:
         if along in stack_over:
             raise ValueError("Duplicated axis name in `along` and `stack_over`.")
@@ -174,7 +176,11 @@ def kymograph(model: WidgetDataModel) -> Parametric:
         else:
             img_slice = img
         order = 0 if img.dtype.kind == "b" else 3
-        sliced = ip.asarray(img_slice.reslice(coords, order=order))
+        if same_dtype:
+            dtype = img.dtype
+        else:
+            dtype = None
+        sliced = ip.asarray(img_slice.reslice(coords, order=order), dtype=dtype)
         sliced = np.swapaxes(sliced, along, -2)
         return image_to_model(sliced, title=f"Kymograph of {model.title}")
 

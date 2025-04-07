@@ -1,4 +1,4 @@
-from himena import WidgetDataModel, Parametric
+from himena import WidgetDataModel, Parametric, StandardType
 from himena.plugins import register_function, configure_gui, configure_submenu
 from himena_image.utils import (
     make_dims_annotation,
@@ -6,7 +6,6 @@ from himena_image.utils import (
     model_to_image,
     norm_dims,
 )
-from himena.consts import StandardType
 
 MENUS = ["image/analyze/fft", "/model_menu/analyze/fft"]
 
@@ -82,6 +81,8 @@ def ifft(model: WidgetDataModel) -> Parametric:
     command_id="himena-image:power_spectrum",
 )
 def power_spectrum(model: WidgetDataModel) -> Parametric:
+    """Compute the power spectrum of an image."""
+
     @configure_gui(
         dimension={"choices": make_dims_annotation(model)},
         norm={"label": "normalize maximum to 1"},
@@ -117,6 +118,8 @@ def power_spectrum(model: WidgetDataModel) -> Parametric:
     command_id="himena-image:fft-filter:lowpass_filter",
 )
 def lowpass_filter(model: WidgetDataModel) -> Parametric:
+    """Apply a low-pass filter to an image."""
+
     @configure_gui(
         dimension={"choices": make_dims_annotation(model)},
         cutoff={"min": 0.0, "max": 1.0},
@@ -146,6 +149,8 @@ def lowpass_filter(model: WidgetDataModel) -> Parametric:
     command_id="himena-image:fft-filter:highpass_filter",
 )
 def highpass_filter(model: WidgetDataModel) -> Parametric:
+    """Apply a high-pass filter to an image."""
+
     @configure_gui(
         dimension={"choices": make_dims_annotation(model)},
         cutoff={"min": 0.0, "max": 1.0},
@@ -177,6 +182,8 @@ def highpass_filter(model: WidgetDataModel) -> Parametric:
     command_id="himena-image:fft-filter:bandpass_filter",
 )
 def bandpass_filter(model: WidgetDataModel) -> Parametric:
+    """Apply a band-pass filter to an image."""
+
     @configure_gui(
         dimension={"choices": make_dims_annotation(model)},
         cutoff={"min": 0.0, "max": 1.0},

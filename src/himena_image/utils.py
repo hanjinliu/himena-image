@@ -44,6 +44,11 @@ def image_to_model(
         is_rgb=is_rgb,
     )
     if orig:
+        if isinstance(orig_meta := orig.metadata, ImageMeta):
+            if channel_axis and [a.name for a in meta.axes] == [
+                a.name for a in orig_meta.axes
+            ]:
+                meta.channels = orig_meta.channels
         out = orig.with_value(img.value, title=title, metadata=meta)
         if title is None:
             out = out.with_title_numbering()

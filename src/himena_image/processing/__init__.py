@@ -1,5 +1,6 @@
 from himena_image.processing import (
     calculate,
+    exposure,
     features,
     filters,
     fft,
@@ -9,4 +10,4 @@ from himena_image.processing import (
     restore,
 )
 
-del calculate, features, filters, fft, transform, morphology, measure, restore
+del calculate, exposure, features, filters, fft, transform, morphology, measure, restore

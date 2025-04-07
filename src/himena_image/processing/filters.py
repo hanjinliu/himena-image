@@ -24,6 +24,8 @@ MENUS = ["image/analyze/filter", "/model_menu/analyze/filter"]
     run_async=True,
 )
 def gaussian_filter(model: WidgetDataModel) -> Parametric:
+    """Apply a Gaussian filter to the image."""
+
     @configure_gui(
         dimension={"choices": make_dims_annotation(model)},
         preview=True,
@@ -48,6 +50,8 @@ def gaussian_filter(model: WidgetDataModel) -> Parametric:
     run_async=True,
 )
 def median_filter(model: WidgetDataModel) -> Parametric:
+    """Apply a median filter to the image."""
+
     @configure_gui(
         dimension={"choices": make_dims_annotation(model)},
         preview=True,
@@ -76,6 +80,8 @@ def median_filter(model: WidgetDataModel) -> Parametric:
     run_async=True,
 )
 def mean_filter(model: WidgetDataModel) -> Parametric:
+    """Apply a mean filter to the image."""
+
     @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
     def run_mean_filter(
         radius: Annotated[float, {"min": 0.0}] = 1.0,
@@ -219,6 +225,8 @@ def doh_filter(model: WidgetDataModel) -> Parametric:
     run_async=True,
 )
 def log_filter(model: WidgetDataModel) -> Parametric:
+    """Apply a Laplacian of Gaussian filter to the image."""
+
     @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
     def run_log_filter(
         sigma: Annotated[float, {"min": 0.0}] = 1.0,
