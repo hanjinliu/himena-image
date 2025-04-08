@@ -100,6 +100,60 @@ def mean_filter(model: WidgetDataModel) -> Parametric:
 
 
 @register_function(
+    title="Min Filter ...",
+    menus=MENUS,
+    types=[StandardType.IMAGE],
+    command_id="himena-image:0-filter-basic:min_filter",
+    run_async=True,
+)
+def min_filter(model: WidgetDataModel) -> Parametric:
+    """Apply a minimum filter to the image."""
+
+    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
+    def run_min_filter(
+        radius: Annotated[float, {"min": 0.0}] = 1.0,
+        mode: PaddingMode = "reflect",
+        cval: float = 0,
+        dimension: int = 2,
+        is_previewing: bool = False,
+    ) -> WidgetDataModel:
+        img = model_to_image(model, is_previewing)
+        out = img.min_filter(
+            radius, mode=mode, cval=cval, dims=norm_dims(dimension, img.axes)
+        )
+        return image_to_model(out, orig=model, is_previewing=is_previewing)
+
+    return run_min_filter
+
+
+@register_function(
+    title="Max Filter ...",
+    menus=MENUS,
+    types=[StandardType.IMAGE],
+    command_id="himena-image:0-filter-basic:max_filter",
+    run_async=True,
+)
+def max_filter(model: WidgetDataModel) -> Parametric:
+    """Apply a maximum filter to the image."""
+
+    @configure_gui(dimension={"choices": make_dims_annotation(model)}, preview=True)
+    def run_max_filter(
+        radius: Annotated[float, {"min": 0.0}] = 1.0,
+        mode: PaddingMode = "reflect",
+        cval: float = 0,
+        dimension: int = 2,
+        is_previewing: bool = False,
+    ) -> WidgetDataModel:
+        img = model_to_image(model, is_previewing)
+        out = img.max_filter(
+            radius, mode=mode, cval=cval, dims=norm_dims(dimension, img.axes)
+        )
+        return image_to_model(out, orig=model, is_previewing=is_previewing)
+
+    return run_max_filter
+
+
+@register_function(
     title="STD Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],

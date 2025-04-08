@@ -26,7 +26,7 @@ classifiers = [
 dependencies = [
   "himena",
   "ndv",
-  "impy-array>=2.4.8",
+  "impy-array>=2.4.9",
   "roifile>=2024.5.24",
 ]
 

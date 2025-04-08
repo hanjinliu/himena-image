@@ -1,89 +1,18 @@
 from __future__ import annotations
 
-from typing import Any, TYPE_CHECKING, Hashable, Mapping, Sequence
-from enum import Enum, auto
+from typing import TYPE_CHECKING
 from cmap import Colormap
 from qtpy import QtWidgets as QtW, QtCore
-import numpy as np
 
-from ndv import DataWrapper, ArrayViewer
+from ndv import ArrayViewer
 from superqt import QEnumComboBox
 from himena.types import WidgetDataModel
 from himena.standards.model_meta import ImageMeta, ArrayAxis
 from himena.plugins import validate_protocol
+from himena_image.widgets._wrapper import ComplexConversionRule
 
 if TYPE_CHECKING:
     from ndv.views._qt._array_view import _QArrayViewer
-
-
-class ComplexConversionRule(Enum):
-    ABS = auto()
-    REAL = auto()
-    IMAG = auto()
-    PHASE = auto()
-    LOG_ABS = auto()
-
-    def apply(self, data: np.ndarray) -> np.ndarray:
-        if self == ComplexConversionRule.ABS:
-            return np.abs(data)
-        elif self == ComplexConversionRule.REAL:
-            return data.real
-        elif self == ComplexConversionRule.IMAG:
-            return data.imag
-        elif self == ComplexConversionRule.PHASE:
-            return np.angle(data)
-        elif self == ComplexConversionRule.LOG_ABS:
-            return np.log(np.abs(data) + 1e-10)
-        raise ValueError(f"Unknown complex conversion rule: {self}")
-
-
-class ModelDataWrapper(DataWrapper):
-    def __init__(self, model: WidgetDataModel):
-        super().__init__(model.value)
-        if not isinstance(meta := model.metadata, ImageMeta):
-            raise ValueError("Invalid metadata")
-        self._meta = meta
-        self._type = model.type
-        self._complex_conversion = ComplexConversionRule.ABS
-
-    @classmethod
-    def supports(cls, obj: Any) -> bool:
-        return isinstance(obj, WidgetDataModel)
-
-    @property
-    def dims(self) -> tuple[str, ...]:
-        if axes := self._meta.axes:
-            return tuple(a.name for a in axes)
-        return tuple(f"axis_{i}" for i in range(len(self._data.shape)))
-
-    @property
-    def coords(self) -> Mapping[Hashable, Sequence]:
-        """Return the coordinates for the data."""
-        return {d: range(s) for d, s in zip(self.dims, self.data.shape)}
-
-    def isel(self, indexers: Mapping[int, int | slice]) -> np.ndarray:
-        """Select a slice from a data store using (possibly) named indices."""
-        import dask.array as da
-
-        sl = [slice(None)] * len(self._data.shape)
-        for k, v in indexers.items():
-            sl[k] = v
-        out = self._data[tuple(sl)]
-        if isinstance(out, da.Array):
-            out = out.compute()
-        assert isinstance(out, np.ndarray)
-        if out.dtype.kind == "b":
-            return out.astype(np.uint8)
-        elif out.dtype.kind == "c":
-            return self._complex_conversion.apply(out)
-        return out
-
-    def sizes(self):
-        if axes := self._meta.axes:
-            names = [a.name for a in axes]
-        else:
-            names = list(range(len(self._data.shape)))
-        return dict(zip(names, self._data.shape))
 
 
 class NDImageViewer(ArrayViewer):
@@ -98,6 +27,7 @@ class NDImageViewer(ArrayViewer):
             QtW.QSizePolicy.Policy.Expanding, QtW.QSizePolicy.Policy.Expanding
         )
         layout.addWidget(spacer)
+        container = QtW.QWidget()
         self._complex_conversion_rule_cbox = QEnumComboBox(
             enum_class=ComplexConversionRule
         )
@@ -105,6 +35,7 @@ class NDImageViewer(ArrayViewer):
             self._on_complex_conversion_rule_changed
         )
         layout.addWidget(self._complex_conversion_rule_cbox)
+        layout.addWidget(container)
 
     @validate_protocol
     def update_model(self, model: WidgetDataModel):
