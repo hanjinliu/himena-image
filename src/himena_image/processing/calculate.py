@@ -3,12 +3,15 @@ from cmap import Colormap
 
 import numpy as np
 import impy as ip
-
-from himena import WidgetDataModel, Parametric, StandardType
+from superqt.utils import qthrottled, ensure_main_thread
+from himena import WidgetDataModel, Parametric, StandardType, create_model
 from himena.plugins import register_function, configure_gui
 from himena.standards.model_meta import ImageMeta, DataFramePlotMeta
 from himena.standards import roi
+from himena.widgets import SubWindow
 from himena_image.utils import image_to_model, model_to_image
+from himena_builtins.qt.image import QImageView, QtRois
+from himena_builtins.qt.dataframe import QDataFramePlotView
 
 MENU = ["image/calculate", "/model_menu/calculate"]
 
@@ -64,7 +67,7 @@ def invert(model: WidgetDataModel) -> WidgetDataModel:
 
 
 @register_function(
-    title="Profile line",
+    title="Profile Line",
     menus=MENU,
     types=[StandardType.IMAGE],
     command_id="himena-image:profile:profile_line",
@@ -84,38 +87,87 @@ def profile_line(model: WidgetDataModel) -> Parametric:
         coords: list[list[float]],
         indices: list[int | None],
     ) -> WidgetDataModel:
-        img = model_to_image(model)
-        _indices = tuple(slice(None) if i is None else i for i in indices)
-        img_slice = img[_indices]
-        if isinstance(img_slice, ip.LazyImgArray):
-            img_slice = img_slice.compute()
-        order: int = 0 if img.dtype.kind == "b" else 3
-        sliced = img_slice.reslice(coords, order=order)
-
-        if sliced.ndim == 2:  # multi-channel
-            sliced_arrays = [sliced[i] for i in range(sliced.shape[0])]
-            slice_headers = [
-                _channed_name(axis.name, i) for i, axis in enumerate(meta.axes)
-            ]
-        elif sliced.ndim == 1:
-            sliced_arrays = [sliced]
-            slice_headers = ["intensity"]
-        else:
-            raise ValueError(f"Invalid shape: {sliced.shape}.")
-        scale = sliced.axes[0].scale
-        distance = np.arange(sliced_arrays[0].shape[0]) * scale
-        df = {"distance": distance}
-        for array, header in zip(sliced_arrays, slice_headers):
-            df[header] = array
-        color_cycle = [Colormap(ch.colormap or "gray")(0.5).hex for ch in meta.channels]
-        return WidgetDataModel(
-            value=df,
-            type=StandardType.DATAFRAME_PLOT,
-            title=f"Profile of {model.title}",
-            metadata=DataFramePlotMeta(plot_color_cycle=color_cycle),
-        )
+        out = _run_profile_line(model_to_image(model), meta, coords, indices)
+        out.title = f"Profile of {model.title}"
+        return out
 
     return run_profile_line
+
+
+@register_function(
+    title="Profile Line (Live)",
+    menus=MENU,
+    types=[StandardType.IMAGE],
+    command_id="himena-image:profile:profile_line_live",
+)
+def profile_line_live(win: SubWindow[QImageView]):
+    """Live-plot the line profile of the current image slice."""
+    plot_view = QDataFramePlotView()
+    update_model_throttled = ensure_main_thread(plot_view.update_model)
+
+    @qthrottled(timeout=50)
+    def _callback():
+        qroi = win.widget._img_view._current_roi_item
+        if isinstance(qroi, (QtRois.QLineRoi, QtRois.QSegmentedLineRoi)):
+            model_input = win.widget.to_model()
+            coords = _get_profile_coords(model_input.metadata)
+            if len(coords) < 2:
+                model = _empty_dataframe_model()
+            else:
+                model = _run_profile_line(
+                    model_to_image(model_input),
+                    model_input.metadata,
+                    coords,
+                    _get_indices_channel_composite(model_input.metadata),
+                )
+        else:
+            model = _empty_dataframe_model()
+        update_model_throttled(model)
+
+    win.widget.current_roi_updated.connect(_callback)
+    win.widget.dims_slider.valueChanged.connect(_callback)
+    child = win.add_child(plot_view, title="Profile Line (Live)")
+    child.closed.connect(lambda: win.widget.current_roi_updated.disconnect(_callback))
+    _callback()
+
+
+def _run_profile_line(
+    img: ip.ImgArray,
+    meta: ImageMeta,
+    coords: list[list[float]],
+    indices: list[int | None],
+    order: int = 3,
+) -> WidgetDataModel:
+    _indices = tuple(slice(None) if i is None else i for i in indices)
+    img_slice = img[_indices]
+    if isinstance(img_slice, ip.LazyImgArray):
+        img_slice = img_slice.compute()
+    order: int = 0 if img.dtype.kind == "b" else order
+    if meta.is_rgb:
+        img_slice = np.moveaxis(img_slice, -1, 0)
+    sliced = img_slice.reslice(coords, order=order)
+
+    if sliced.ndim == 2:  # multi-channel
+        sliced_arrays = [sliced[i] for i in range(sliced.shape[0])]
+        slice_headers = [
+            _channed_name(axis.name, i) for i, axis in enumerate(meta.axes)
+        ]
+    elif sliced.ndim == 1:
+        sliced_arrays = [sliced]
+        slice_headers = ["intensity"]
+    else:
+        raise ValueError(f"Invalid shape: {sliced.shape}.")
+    scale = sliced.axes[0].scale
+    distance = np.arange(sliced_arrays[0].shape[0]) * scale
+    df = {"distance": distance}
+    for array, header in zip(sliced_arrays, slice_headers):
+        df[header] = array
+    color_cycle = [Colormap(ch.colormap or "gray")(0.5).hex for ch in meta.channels]
+    return create_model(
+        value=df,
+        type=StandardType.DATAFRAME_PLOT,
+        metadata=DataFramePlotMeta(plot_color_cycle=color_cycle),
+    )
 
 
 @register_function(
@@ -193,7 +245,7 @@ def _channed_name(ch: str | None, i: int) -> str:
     return ch
 
 
-def _get_profile_coords(meta: ImageMeta):
+def _get_profile_coords(meta: ImageMeta) -> list[list[float]]:
     if isinstance(r := meta.current_roi, roi.LineRoi):
         points = [[r.y1, r.x1], [r.y2, r.x2]]
     elif isinstance(r := meta.current_roi, roi.SegmentedLineRoi):
@@ -215,3 +267,10 @@ def _get_indices_channel_composite(meta: ImageMeta):
         indices[meta.channel_axis] = None
     indices = tuple(indices)
     return indices
+
+
+def _empty_dataframe_model():
+    return create_model(
+        {"x": [], "y": []},
+        type=StandardType.DATAFRAME_PLOT,
+    )

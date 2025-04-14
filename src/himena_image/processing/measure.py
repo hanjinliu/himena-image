@@ -7,12 +7,15 @@ import numpy as np
 from numpy.typing import NDArray
 from scipy import ndimage as ndi
 
-from himena import WidgetDataModel, Parametric, StandardType
+from himena import WidgetDataModel, Parametric, StandardType, create_model
 from himena.consts import MenuId
 from himena.widgets import append_result
 from himena.plugins import register_function, configure_gui
 from himena.standards import roi, model_meta
 from himena.data_wrappers import wrap_array, ArrayWrapper
+from himena.widgets import SubWindow
+from himena_builtins.qt.image import QImageView
+from himena_builtins.qt.basic import QDictView
 
 
 @register_function(
@@ -23,12 +26,50 @@ from himena.data_wrappers import wrap_array, ArrayWrapper
     command_id="himena-image:roi-measure-current",
 )
 def roi_measure_current(model: WidgetDataModel):
-    arr = wrap_array(model.value)
     if not isinstance(meta := model.metadata, model_meta.ImageMeta):
         raise ValueError("Image must have an ImageMeta.")
     roi = meta.current_roi
     if roi is None:
         raise ValueError("No ROI selected.")
+    output = _measure(model, meta, roi)
+    append_result(output)
+    return None
+
+
+@register_function(
+    title="Measure At Current ROI (Live)",
+    types=StandardType.IMAGE,
+    menus=[MenuId.TOOLS_IMAGE_ROI, "/model_menu/roi"],
+    command_id="himena-image:roi-measure-current-live",
+)
+def roi_measure_current_live(win: SubWindow[QImageView]):
+    """Live-measure the ROI features."""
+    dict_view = QDictView()
+
+    def _callback():
+        model = win.widget.to_model()
+        if not isinstance(meta := model.metadata, model_meta.ImageMeta):
+            raise ValueError("Image must have an ImageMeta.")
+        if roi := meta.current_roi:
+            output = _measure(model, meta, roi)
+        else:
+            output = {}
+        dict_view.update_model(create_model(output, type=StandardType.DICT))
+
+    win.widget.current_roi_updated.connect(_callback)
+    win.widget.dims_slider.valueChanged.connect(_callback)
+    dict_view.set_editable(False)
+    child = win.add_child(dict_view, title="Measure (Live)")
+    child.closed.connect(lambda: win.widget.current_roi_updated.disconnect(_callback))
+    _callback()
+
+
+def _measure(
+    model: WidgetDataModel,
+    meta: model_meta.ImageMeta,
+    roi: roi.RoiModel,
+) -> dict[str, float]:
+    arr = wrap_array(model.value)
     current_indices = meta.current_indices
     if current_indices is None:
         raise ValueError("`current_indices` is not set.")
@@ -45,8 +86,7 @@ def roi_measure_current(model: WidgetDataModel):
             output[metric_name] = float(result)
         else:
             output[metric_name] = result
-    append_result(output)
-    return None
+    return output
 
 
 @register_function(
@@ -179,7 +219,7 @@ def _(r: roi.PointRoi2D, arr_nd: np.ndarray):
 
 @slice_array.register
 def _(r: roi.PointsRoi2D, arr_nd: np.ndarray):
-    coords = np.stack([r.ys, r.xs], axis=1)
+    coords = np.stack([r.ys, r.xs], axis=0)
     out = ndi.map_coordinates(arr_nd, coords, order=1, mode="nearest")
     return out
 
@@ -210,17 +250,17 @@ _Roi = TypeVar("_Roi", bound=roi.RoiModel)
 _MetricsType = Callable[[_Roi, NDArray[np.number], NDArray[np.number]], float]
 # Supported additional metrics for each ROI type
 METRICS_SHARED: dict[str, _MetricsType[roi.RoiModel]] = {
-    "mean": lambda roi, ar_sl: np.mean(ar_sl),
-    "std": lambda roi, ar_sl: np.std(ar_sl),
-    "min": lambda roi, ar_sl: np.min(ar_sl),
-    "max": lambda roi, ar_sl: np.max(ar_sl),
-    "sum": lambda roi, ar_sl: np.sum(ar_sl),
-    "median": lambda roi, ar_sl: np.median(ar_sl),
+    "mean": lambda roi, ar_sl: np.mean(ar_sl) if ar_sl.size > 0 else np.nan,
+    "std": lambda roi, ar_sl: np.std(ar_sl) if ar_sl.size > 0 else np.nan,
+    "min": lambda roi, ar_sl: np.min(ar_sl) if ar_sl.size > 0 else np.nan,
+    "max": lambda roi, ar_sl: np.max(ar_sl) if ar_sl.size > 0 else np.nan,
+    "sum": lambda roi, ar_sl: np.sum(ar_sl) if ar_sl.size > 0 else np.nan,
+    "median": lambda roi, ar_sl: np.median(ar_sl) if ar_sl.size > 0 else np.nan,
     "area": lambda roi, ar_sl: ar_sl.size,
 }
 _METRICS_LINE: dict[str, _MetricsType[roi.LineRoi]] = {
     "length": lambda roi, ar_sl: roi.length(),
-    "angle": lambda roi, ar_sl: roi.angle(),
+    "angle": lambda roi, ar_sl: roi.angle() if roi.length() > 0 else np.nan,
 }
 _METRICS_SEGMENTED_LINE: dict[str, _MetricsType[roi.SegmentedLineRoi]] = {
     "length": lambda roi, ar_sl: roi.length(),
@@ -235,13 +275,13 @@ _METRICS_ELLIPSE: dict[str, _MetricsType[roi.EllipseRoi]] = {
     "width": lambda roi, ar_sl: roi.width,
     "height": lambda roi, ar_sl: roi.height,
     "circumference": lambda roi, ar_sl: roi.circumference(),
-    "eccentricity": lambda roi, ar_sl: roi.eccentricity(),
+    "eccentricity": lambda roi, ar_sl: roi.eccentricity() if roi.area() > 0 else np.nan,
 }
 _METRICS_ROTATED_RECTANGLE: dict[str, _MetricsType[roi.RotatedRectangleRoi]] = {
     "area": lambda roi, ar_sl: roi.area(),
     "width": lambda roi, ar_sl: roi.width,
     "lenght": lambda roi, ar_sl: roi.length(),
-    "angle": lambda roi, ar_sl: roi.angle(),
+    "angle": lambda roi, ar_sl: roi.angle() if roi.length() > 0 else np.nan,
 }
 
 METRICS_ADDITIONAL: dict[type[roi.RoiModel], dict[str, _MetricsType[roi.LineRoi]]] = {
