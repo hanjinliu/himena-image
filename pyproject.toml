@@ -24,7 +24,7 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
-  "himena",
+  "himena>=0.0.9",
   "ndv",
   "impy-array>=2.4.9",
   "roifile>=2024.5.24",
