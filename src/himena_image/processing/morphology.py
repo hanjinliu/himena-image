@@ -11,7 +11,7 @@ from himena_image.utils import (
     norm_dims,
 )
 
-MENUS = ["image/analyze/morphology", "/model_menu/analyze/morphology"]
+MENUS = ["tools/image/process/morphology", "/model_menu/process/morphology"]
 
 
 @register_function(

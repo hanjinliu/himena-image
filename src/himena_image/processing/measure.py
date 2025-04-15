@@ -8,7 +8,6 @@ from numpy.typing import NDArray
 from scipy import ndimage as ndi
 
 from himena import WidgetDataModel, Parametric, StandardType, create_model
-from himena.consts import MenuId
 from himena.widgets import append_result
 from himena.plugins import register_function, configure_gui
 from himena.standards import roi, model_meta
@@ -17,11 +16,13 @@ from himena.widgets import SubWindow
 from himena_builtins.qt.image import QImageView
 from himena_builtins.qt.basic import QDictView
 
+MENUS = ["tools/image/analyze", "/model_menu/analyze"]
+
 
 @register_function(
     title="Measure At Current ROI",
     types=StandardType.IMAGE,
-    menus=[MenuId.TOOLS_IMAGE_ROI, "/model_menu/roi"],
+    menus=MENUS,
     keybindings="M",
     command_id="himena-image:roi-measure-current",
 )
@@ -39,7 +40,7 @@ def roi_measure_current(model: WidgetDataModel):
 @register_function(
     title="Measure At Current ROI (Live)",
     types=StandardType.IMAGE,
-    menus=[MenuId.TOOLS_IMAGE_ROI, "/model_menu/roi"],
+    menus=MENUS,
     command_id="himena-image:roi-measure-current-live",
 )
 def roi_measure_current_live(win: SubWindow[QImageView]):
@@ -92,11 +93,12 @@ def _measure(
 @register_function(
     title="Measure ROIs ...",
     types=StandardType.IMAGE,
-    menus=[MenuId.TOOLS_IMAGE_ROI, "/model_menu/roi"],
+    menus=MENUS,
     run_async=True,
     command_id="himena-image:roi-measure",
 )
 def roi_measure(model: WidgetDataModel) -> Parametric:
+    """Measure features for each ROI."""
     # TODO: length, area. etc
     metrics_choices = list(METRICS_SHARED.keys())
     arr = wrap_array(model.value)

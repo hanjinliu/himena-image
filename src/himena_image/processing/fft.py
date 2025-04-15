@@ -7,7 +7,7 @@ from himena_image.utils import (
     norm_dims,
 )
 
-MENUS = ["image/analyze/fft", "/model_menu/analyze/fft"]
+MENUS = ["tools/image/process/fft", "/model_menu/process/fft"]
 
 configure_submenu(MENUS, title="Fourier transform")
 

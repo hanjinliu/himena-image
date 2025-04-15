@@ -9,7 +9,7 @@ import numpy as np
 from himena.widgets import SubWindow
 from himena_image.utils import model_to_image
 
-MENUS = ["image/exposure", "/model_menu/exposure"]
+MENUS = ["tools/image/exposure", "/model_menu/exposure"]
 
 
 @register_function(

@@ -13,7 +13,7 @@ from himena_image.utils import image_to_model, model_to_image
 from himena_builtins.qt.image import QImageView, QtRois
 from himena_builtins.qt.dataframe import QDataFramePlotView
 
-MENU = ["image/calculate", "/model_menu/calculate"]
+MENU = ["tools/image/calculate", "/model_menu/calculate"]
 
 
 @register_function(
@@ -70,7 +70,7 @@ def invert(model: WidgetDataModel) -> WidgetDataModel:
     title="Profile Line",
     menus=MENU,
     types=[StandardType.IMAGE],
-    command_id="himena-image:profile:profile_line",
+    command_id="himena-image:profile:profile-line",
     keybindings=["/"],
     run_async=True,
 )
@@ -98,7 +98,7 @@ def profile_line(model: WidgetDataModel) -> Parametric:
     title="Profile Line (Live)",
     menus=MENU,
     types=[StandardType.IMAGE],
-    command_id="himena-image:profile:profile_line_live",
+    command_id="himena-image:profile:profile-line-live",
 )
 def profile_line_live(win: SubWindow[QImageView]):
     """Live-plot the line profile of the current image slice."""
