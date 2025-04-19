@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from functools import singledispatch
+from functools import reduce, singledispatch
 from typing import Callable, TypeVar
 import warnings
 import numpy as np
@@ -99,7 +99,6 @@ def _measure(
 )
 def roi_measure(model: WidgetDataModel) -> Parametric:
     """Measure features for each ROI."""
-    # TODO: length, area. etc
     metrics_choices = list(METRICS_SHARED.keys())
     arr = wrap_array(model.value)
     if not isinstance(meta := model.metadata, model_meta.ImageMeta):
@@ -113,21 +112,32 @@ def roi_measure(model: WidgetDataModel) -> Parametric:
     @configure_gui(
         metrics={"choices": metrics_choices, "widget_type": "Select"},
         along={"choices": axes_choices, "widget_type": "Select"},
+        pivot={"value": len(axes_choices) > 0},  # only enable for nD images
+        additional={"text": "Also measure additional common metrics"},
     )
     def run_measure(
         metrics: list[str],
         along: list[int],
-        pivot: bool = True,
+        pivot: bool,
+        additional: bool = True,
     ) -> WidgetDataModel:
-        if isinstance(meta.rois, roi.RoiListModel):
-            rois = meta.rois
-        else:
-            rois = meta.rois()
+        rois = meta.unwrap_rois()
         if len(rois) == 0:
             raise ValueError("No ROIs to measure.")
 
         ndindex_shape = tuple(arr.shape[i] for i in along)
         funcs = [METRICS_SHARED[metric] for metric in metrics]
+
+        if additional:
+            # if all the rois are the same type with additional metrics, add them to funcs
+            _more = reduce(
+                _dict_intersection,
+                [METRICS_ADDITIONAL.get(type(each_roi), {}) for each_roi in rois],
+            )
+            if _more:
+                _more_metrics = list(_more.keys())
+                metrics = metrics + _more_metrics
+                funcs = funcs + [_more[metric] for metric in _more_metrics]
 
         # check name collision between axis names and metrics names
         for metric in metrics:
@@ -206,11 +216,9 @@ def _(r: roi.RectangleRoi, arr_nd: np.ndarray):
 
 @slice_array.register
 def _(r: roi.EllipseRoi, arr_nd: np.ndarray):
-    bb = r.bbox().adjust_to_int("inner")
-    arr = arr_nd[..., bb.top : bb.bottom, bb.left : bb.right]
-    _yy, _xx = np.indices(arr.shape[-2:])
+    _yy, _xx = np.indices(arr_nd.shape[-2:])
     mask = (_yy - r.y) ** 2 / r.height**2 + (_xx - r.x) ** 2 / r.width**2 <= 1
-    return arr[..., mask]
+    return arr_nd[..., mask]
 
 
 @slice_array.register
@@ -245,6 +253,13 @@ def _slice_array_along_line(arr_nd: NDArray[np.number], xs, ys):
         arr_2d = arr_nd[sl]
         out[sl] = ndi.map_coordinates(arr_2d, coords, order=1, mode="nearest")
     return out
+
+
+def _dict_intersection(
+    dict1: dict[str, _MetricsType[roi.RoiModel]],
+    dict2: dict[str, _MetricsType[roi.RoiModel]],
+) -> dict[str, _MetricsType[roi.RoiModel]]:
+    return {k: v for k, v in dict1.items() if k in dict2}
 
 
 _Roi = TypeVar("_Roi", bound=roi.RoiModel)
@@ -285,11 +300,27 @@ _METRICS_ROTATED_RECTANGLE: dict[str, _MetricsType[roi.RotatedRectangleRoi]] = {
     "lenght": lambda roi, ar_sl: roi.length(),
     "angle": lambda roi, ar_sl: roi.angle() if roi.length() > 0 else np.nan,
 }
+_METRICS_ROTATED_ELLIPSE: dict[str, _MetricsType[roi.RotatedEllipseRoi]] = {
+    "area": lambda roi, ar_sl: roi.area(),
+    "width": lambda roi, ar_sl: roi.width,
+    "lenght": lambda roi, ar_sl: roi.length(),
+    "angle": lambda roi, ar_sl: roi.angle() if roi.length() > 0 else np.nan,
+}
+_METRICS_CIRCLE: dict[str, _MetricsType[roi.CircleRoi]] = {
+    "radius": lambda roi, ar_sl: roi.radius,
+}
+_METRICS_POINT: dict[str, _MetricsType[roi.PointRoi2D]] = {
+    "x": lambda roi, ar_sl: roi.x,
+    "y": lambda roi, ar_sl: roi.y,
+}
 
-METRICS_ADDITIONAL: dict[type[roi.RoiModel], dict[str, _MetricsType[roi.LineRoi]]] = {
+METRICS_ADDITIONAL: dict[type[roi.RoiModel], dict[str, _MetricsType[roi.Roi2D]]] = {
+    roi.PointRoi2D: _METRICS_POINT,
     roi.LineRoi: _METRICS_LINE,
     roi.SegmentedLineRoi: _METRICS_SEGMENTED_LINE,
     roi.RectangleRoi: _METRICS_RECTANGLE,
     roi.EllipseRoi: _METRICS_ELLIPSE,
     roi.RotatedRectangleRoi: _METRICS_ROTATED_RECTANGLE,
+    roi.RotatedEllipseRoi: _METRICS_ROTATED_ELLIPSE,
+    roi.CircleRoi: _METRICS_CIRCLE,
 }

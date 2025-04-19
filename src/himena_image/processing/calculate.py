@@ -40,11 +40,13 @@ def projection(model: WidgetDataModel) -> Parametric:
     def run_projection(
         axis: str,
         method: Literal["mean", "median", "max", "min", "sum", "std"],
-        range: tuple[int, int],
+        # range: tuple[int, int],
     ) -> WidgetDataModel:
         img = model_to_image(model)
         out = img.proj(axis=axis, method=method)
-        return image_to_model(out, title=model.title)
+        return image_to_model(
+            out, title=model.title, extension_default=model.extension_default
+        )
 
     return run_projection
 

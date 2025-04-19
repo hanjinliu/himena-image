@@ -175,7 +175,9 @@ def std_filter(model: WidgetDataModel) -> Parametric:
         out = img.std_filter(
             radius, mode=mode, cval=cval, dims=norm_dims(dimension, img.axes)
         )
-        return image_to_model(out, orig=model, is_previewing=is_previewing)
+        return image_to_model(
+            out, orig=model, is_previewing=is_previewing, reset_clim=True
+        )
 
     return run_std_filter
 
@@ -202,7 +204,9 @@ def coef_filter(model: WidgetDataModel) -> Parametric:
         out = img.coef_filter(
             radius, mode=mode, cval=cval, dims=norm_dims(dimension, img.axes)
         )
-        return image_to_model(out, orig=model, is_previewing=is_previewing)
+        return image_to_model(
+            out, orig=model, is_previewing=is_previewing, reset_clim=True
+        )
 
     return run_coef_filter
 
@@ -224,7 +228,9 @@ def dog_filter(model: WidgetDataModel) -> Parametric:
     ) -> WidgetDataModel:
         img = model_to_image(model, is_previewing)
         out = img.dog_filter(sigma_low, sigma_high, dims=norm_dims(dimension, img.axes))
-        return image_to_model(out, orig=model, is_previewing=is_previewing)
+        return image_to_model(
+            out, orig=model, is_previewing=is_previewing, reset_clim=True
+        )
 
     return run_dog_filter
 
@@ -245,7 +251,9 @@ def laplacian_filter(model: WidgetDataModel) -> Parametric:
     ) -> WidgetDataModel:
         img = model_to_image(model, is_previewing)
         out = img.laplacian_filter(radius=radius, dims=norm_dims(dimension, img.axes))
-        return image_to_model(out, orig=model, is_previewing=is_previewing)
+        return image_to_model(
+            out, orig=model, is_previewing=is_previewing, reset_clim=True
+        )
 
     return run_laplacian_filter
 
@@ -266,7 +274,9 @@ def doh_filter(model: WidgetDataModel) -> Parametric:
     ) -> WidgetDataModel:
         img = model_to_image(model, is_previewing)
         out = img.doh_filter(sigma, dims=norm_dims(dimension, img.axes))
-        return image_to_model(out, orig=model, is_previewing=is_previewing)
+        return image_to_model(
+            out, orig=model, is_previewing=is_previewing, reset_clim=True
+        )
 
     return run_doh_filter
 
@@ -289,7 +299,9 @@ def log_filter(model: WidgetDataModel) -> Parametric:
     ) -> WidgetDataModel:
         img = model_to_image(model, is_previewing)
         out = img.log_filter(sigma, dims=norm_dims(dimension, img.axes))
-        return image_to_model(out, orig=model, is_previewing=is_previewing)
+        return image_to_model(
+            out, orig=model, is_previewing=is_previewing, reset_clim=True
+        )
 
     return run_log_filter
 
@@ -307,14 +319,18 @@ def rolling_ball(model: WidgetDataModel) -> Parametric:
     @configure_gui(dimension={"choices": make_dims_annotation(model)})
     def run_rolling_ball(
         radius: Annotated[float, {"min": 0.0}] = 30.0,
+        prefilter: Literal["mean", "median", "none"] = "mean",
         dimension: int = 2,
         return_background: bool = False,
     ) -> WidgetDataModel:
         img = model_to_image(model)
         out = img.rolling_ball(
-            radius, return_bg=return_background, dims=norm_dims(dimension, img.axes)
+            radius,
+            prefilter=prefilter,
+            return_bg=return_background,
+            dims=norm_dims(dimension, img.axes),
         )
-        return image_to_model(out, orig=model)
+        return image_to_model(out, orig=model, reset_clim=True)
 
     return run_rolling_ball
 
@@ -335,7 +351,7 @@ def entropy_filter(model: WidgetDataModel) -> Parametric:
     ) -> WidgetDataModel:
         img = model_to_image(model)
         out = img.entropy_filter(radius, dims=norm_dims(dimension, img.axes))
-        return image_to_model(out, orig=model)
+        return image_to_model(out, orig=model, reset_clim=True)
 
     return run_entropy
 
@@ -426,7 +442,9 @@ def edge_filter(model: WidgetDataModel) -> Parametric:
     ) -> WidgetDataModel:
         img = model_to_image(model, is_previewing)
         out = img.edge_filter(method, dims=norm_dims(dimension, img.axes))
-        return image_to_model(out, orig=model, is_previewing=is_previewing)
+        return image_to_model(
+            out, orig=model, is_previewing=is_previewing, reset_clim=True
+        )
 
     return run_edge_filter
 

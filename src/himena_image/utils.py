@@ -1,12 +1,9 @@
 from __future__ import annotations
 from typing import Literal, Sequence, overload
-from himena import WidgetDataModel
+from himena import WidgetDataModel, create_model
 import impy as ip
 from himena.consts import StandardType
-from himena.standards.model_meta import (
-    ImageMeta,
-    ArrayAxis,
-)
+from himena.standards.model_meta import ImageMeta, ArrayAxis
 
 
 def image_to_model(
@@ -15,6 +12,8 @@ def image_to_model(
     is_rgb: bool | None = None,
     orig: WidgetDataModel | None = None,
     is_previewing: bool = False,
+    reset_clim: bool = False,
+    extension_default: str | None = None,
 ) -> WidgetDataModel:
     """Convert impy image array to WidgetDataModel."""
     # normalize is_rgb
@@ -45,16 +44,17 @@ def image_to_model(
     )
     if orig:
         if isinstance(orig_meta := orig.metadata, ImageMeta):
-            if channel_axis and [a.name for a in meta.axes] == [
-                a.name for a in orig_meta.axes
-            ]:
+            if channel_axis and len(meta.channels) == len(orig_meta.channels):
                 meta.channels = orig_meta.channels
+            if reset_clim:
+                for ch in meta.channels:
+                    ch.contrast_limits = None
         out = orig.with_value(img.value, title=title, metadata=meta)
         if title is None:
             out = out.with_title_numbering()
     else:
-        out = WidgetDataModel(
-            value=img.value,
+        out = create_model(
+            img.value,
             type=StandardType.IMAGE,
             title=title,
             metadata=meta,
@@ -62,6 +62,8 @@ def image_to_model(
     if is_previewing:
         meta.current_indices = None
         meta.contrast_limits = None
+    if extension_default:
+        out.extension_default = extension_default
     return out
 
 

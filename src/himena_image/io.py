@@ -33,7 +33,10 @@ def read_image(path: Path):
     img = ip.imread(path)
     is_rgb = "c" in img.axes and path.suffix in [".png", ".jpg", ".jpeg"]
     model = image_to_model(img, is_rgb=is_rgb)
-    model.extension_default = path.suffix
+    if path.suffix == ".nd2":
+        model.extension_default = ".tif"  # ND2 writer not supported yet
+    else:
+        model.extension_default = path.suffix
     return model
 
 
