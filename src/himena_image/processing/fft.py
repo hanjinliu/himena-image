@@ -35,7 +35,9 @@ def fft(model: WidgetDataModel) -> Parametric:
             double_precision=double_precision,
             dims=norm_dims(dimension, img.axes),
         )
-        return image_to_model(out, orig=model, is_previewing=is_previewing)
+        return image_to_model(out, orig=model, is_previewing=is_previewing).astype(
+            StandardType.IMAGE_FOURIER
+        )
 
     return run_fft
 
@@ -43,7 +45,7 @@ def fft(model: WidgetDataModel) -> Parametric:
 @register_function(
     title="IFFT ...",
     menus=MENUS,
-    types=[StandardType.IMAGE],
+    types=[StandardType.IMAGE, StandardType.IMAGE_FOURIER],
     run_async=True,
     command_id="himena-image:ifft",
 )
@@ -78,7 +80,7 @@ def ifft(model: WidgetDataModel) -> Parametric:
     menus=MENUS,
     types=[StandardType.IMAGE],
     run_async=True,
-    command_id="himena-image:power_spectrum",
+    command_id="himena-image:power-spectrum",
 )
 def power_spectrum(model: WidgetDataModel) -> Parametric:
     """Compute the power spectrum of an image."""
@@ -97,6 +99,21 @@ def power_spectrum(model: WidgetDataModel) -> Parametric:
         dimension=2,
         is_previewing: bool = False,
     ) -> WidgetDataModel:
+        """Run the power spectrum calculation.
+
+        Parameters
+        ----------
+        origin_in_center : bool, optional
+            If True, the zero frequency is in the center of the image. Otherwise, it is
+            in the A[0, 0] position.
+        norm : bool, optional
+            If True, the maximum value of the power spectrum is normalized to 1.
+        zero_norm : bool, optional
+            If True, the zero frequency is normalized to 0.
+        double_precision : bool, optional
+            If True, the calculation is done in double precision (float64). Otherwise,
+            it is done in single precision (float32).
+        """
         img = model_to_image(model, is_previewing)
         out = img.power_spectra(
             shift=origin_in_center,
@@ -105,7 +122,9 @@ def power_spectrum(model: WidgetDataModel) -> Parametric:
             zero_norm=zero_norm,
             dims=norm_dims(dimension, img.axes),
         )
-        return image_to_model(out, orig=model, is_previewing=is_previewing)
+        return image_to_model(out, orig=model, is_previewing=is_previewing).astype(
+            StandardType.IMAGE_FOURIER
+        )
 
     return run_power_spectrum
 
@@ -115,7 +134,8 @@ def power_spectrum(model: WidgetDataModel) -> Parametric:
     menus=MENUS,
     types=[StandardType.IMAGE],
     run_async=True,
-    command_id="himena-image:fft-filter:lowpass_filter",
+    command_id="himena-image:lowpass-filter",
+    group="fft-filter",
 )
 def lowpass_filter(model: WidgetDataModel) -> Parametric:
     """Apply a low-pass filter to an image."""
@@ -146,7 +166,8 @@ def lowpass_filter(model: WidgetDataModel) -> Parametric:
     menus=MENUS,
     types=[StandardType.IMAGE],
     run_async=True,
-    command_id="himena-image:fft-filter:highpass_filter",
+    command_id="himena-image:highpass-filter",
+    group="fft-filter",
 )
 def highpass_filter(model: WidgetDataModel) -> Parametric:
     """Apply a high-pass filter to an image."""
@@ -179,7 +200,8 @@ def highpass_filter(model: WidgetDataModel) -> Parametric:
     menus=MENUS,
     types=[StandardType.IMAGE],
     run_async=True,
-    command_id="himena-image:fft-filter:bandpass_filter",
+    command_id="himena-image:bandpass-filter",
+    group="fft-filter",
 )
 def bandpass_filter(model: WidgetDataModel) -> Parametric:
     """Apply a band-pass filter to an image."""

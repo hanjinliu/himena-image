@@ -3,7 +3,7 @@ from typing import Literal, Sequence, overload
 from himena import WidgetDataModel, create_model
 import impy as ip
 from himena.consts import StandardType
-from himena.standards.model_meta import ImageMeta, ArrayAxis
+from himena.standards.model_meta import ImageMeta, DimAxis
 
 
 def image_to_model(
@@ -31,7 +31,7 @@ def image_to_model(
         channel_axis = None
     meta = ImageMeta(
         axes=[
-            ArrayAxis(
+            DimAxis(
                 name=str(a),
                 scale=a.scale,
                 unit=a.unit,

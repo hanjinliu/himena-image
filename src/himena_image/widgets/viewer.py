@@ -7,7 +7,7 @@ from qtpy import QtWidgets as QtW, QtCore
 from ndv import ArrayViewer
 from superqt import QEnumComboBox
 from himena.types import WidgetDataModel
-from himena.standards.model_meta import ImageMeta, ArrayAxis
+from himena.standards.model_meta import ImageMeta, DimAxis
 from himena.plugins import validate_protocol
 from himena_image.widgets._wrapper import ComplexConversionRule
 
@@ -64,7 +64,7 @@ class NDImageViewer(ArrayViewer):
             type=self.model_type(),
             metadata=ImageMeta(
                 current_indices=indices,
-                axes=[ArrayAxis(name=a) for a in self.data_wrapper.dims],
+                axes=[DimAxis(name=a) for a in self.data_wrapper.dims],
             ),
         )
 

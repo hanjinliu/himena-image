@@ -117,5 +117,5 @@ for sample in SKIMAGE_SAMPLES:
         title=sample.filename,
         menus=MENU,
         run_async=True,
-        command_id=f"himena-image:skimage-sample:{sample}",
+        command_id=f"himena-image:skimage-sample:{sample.filename.replace('_', '-')}",
     )

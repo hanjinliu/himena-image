@@ -16,7 +16,8 @@ MENUS = ["tools/image/process/restore", "/model_menu/process/restore"]
     title="Track drift ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:restore:track_drift",
+    command_id="himena-image:track-drift",
+    group="00-drift",
     run_async=True,
 )
 def track_drift(model: WidgetDataModel) -> Parametric:
@@ -52,7 +53,8 @@ def track_drift(model: WidgetDataModel) -> Parametric:
     title="Drift correction ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:restore:drift_correction",
+    command_id="himena-image:drift-correction",
+    group="00-drift",
     run_async=True,
 )
 def drift_correction(model: WidgetDataModel) -> Parametric:
@@ -105,7 +107,8 @@ def _along_default_and_choices(axes) -> tuple[str, list[str]]:
     title="Richardson-Lucy deconvolution ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:restore-deconv:lucy-deconv",
+    command_id="himena-image:lucy-deconv",
+    group="20-deconvolution",
     run_async=True,
 )
 def lucy(model: WidgetDataModel) -> Parametric:
@@ -132,7 +135,8 @@ def lucy(model: WidgetDataModel) -> Parametric:
     title="Richardson-Lucy TV deconvolution ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:restore-deconv:lucy-tv-deconv",
+    command_id="himena-image:lucy-tv-deconv",
+    group="20-deconvolution",
     run_async=True,
 )
 def lucy_tv(model: WidgetDataModel) -> Parametric:
@@ -158,7 +162,7 @@ def lucy_tv(model: WidgetDataModel) -> Parametric:
             lmd=lmd,
             tol=tol,
             eps=eps,
-            dims=norm_dims(dimension, img.axe),
+            dims=norm_dims(dimension, img.axes),
         )
         return image_to_model(out, orig=model)
 

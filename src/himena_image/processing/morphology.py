@@ -18,7 +18,8 @@ MENUS = ["tools/image/process/morphology", "/model_menu/process/morphology"]
     title="Dilation ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:0-morph-basic:dilation",
+    command_id="himena-image:dilation",
+    group="morphology-basic",
     run_async=True,
 )
 def dilation(model: WidgetDataModel) -> Parametric:
@@ -43,7 +44,8 @@ def dilation(model: WidgetDataModel) -> Parametric:
     title="Erosion ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:0-morph-basic:erosion",
+    command_id="himena-image:erosion",
+    group="morphology-basic",
     run_async=True,
 )
 def erosion(model: WidgetDataModel) -> Parametric:
@@ -68,7 +70,8 @@ def erosion(model: WidgetDataModel) -> Parametric:
     title="Opening ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:1-morph-comp:opening",
+    command_id="himena-image:opening",
+    group="morphology-composit",
     run_async=True,
 )
 def opening(model: WidgetDataModel) -> Parametric:
@@ -93,7 +96,8 @@ def opening(model: WidgetDataModel) -> Parametric:
     title="Closing ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:1-morph-comp:closing",
+    command_id="himena-image:closing",
+    group="morphology-composit",
     run_async=True,
 )
 def closing(model: WidgetDataModel) -> Parametric:
@@ -118,7 +122,8 @@ def closing(model: WidgetDataModel) -> Parametric:
     title="Top-hat Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:1-morph-comp:tophat",
+    command_id="himena-image:tophat",
+    group="morphology-composit",
     run_async=True,
 )
 def tophat(model: WidgetDataModel) -> Parametric:
@@ -143,7 +148,8 @@ def tophat(model: WidgetDataModel) -> Parametric:
     title="Skeletonize ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:1-morph-comp:skeletonize",
+    command_id="himena-image:skeletonize",
+    group="morphology-composit",
     run_async=True,
 )
 def skeletonize(model: WidgetDataModel) -> Parametric:

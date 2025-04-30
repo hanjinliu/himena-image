@@ -165,7 +165,7 @@ def bin(model: WidgetDataModel) -> Parametric:
     title="Radial profile ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:radial_profile",
+    command_id="himena-image:radial-profile",
     run_async=True,
 )
 def radial_profile(model: WidgetDataModel) -> Parametric:
@@ -198,7 +198,8 @@ def radial_profile(model: WidgetDataModel) -> Parametric:
     title="Unmix multi-channel image ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:transform-color:unmix",
+    command_id="himena-image:unmix",
+    group="transform-color",
 )
 def unmix(model: WidgetDataModel):
     """Run unmixing of fluorescence leakage between channels."""

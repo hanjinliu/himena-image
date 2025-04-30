@@ -2,10 +2,12 @@ import impy as ip
 
 from himena import StandardType, WidgetDataModel, Parametric
 from himena.plugins import register_function, configure_gui
+import numpy as np
 from himena_image.utils import (
     label_to_model,
     make_dims_annotation,
     model_to_image,
+    image_to_model,
     norm_dims,
 )
 
@@ -40,7 +42,7 @@ def label(model: WidgetDataModel) -> Parametric:
     menus=MENUS,
     types=[StandardType.IMAGE],
     run_async=True,
-    command_id="himena-image:peak_local_max",
+    command_id="himena-image:peak-local-max",
 )
 def peak_local_max(model: WidgetDataModel) -> Parametric:
     @configure_gui(
@@ -94,7 +96,7 @@ REGIONPROPS_CHOICES = [
     menus=MENUS,
     types=[StandardType.IMAGE],
     run_async=True,
-    command_id="himena-image:region_properties",
+    command_id="himena-image:region-properties",
 )
 def region_properties(model: WidgetDataModel) -> Parametric:
     """Measure region properties of an image."""
@@ -120,3 +122,73 @@ def region_properties(model: WidgetDataModel) -> Parametric:
         )
 
     return run_region_properties
+
+
+@register_function(
+    title="Hessian Eigenvalues ...",
+    menus=MENUS,
+    types=[StandardType.IMAGE],
+    run_async=True,
+    command_id="himena-image:hessian-eigenvalues",
+)
+def hessian_eigenvalues(model: WidgetDataModel) -> Parametric:
+    """Compute the Hessian eigenvalues of an image."""
+
+    @configure_gui(
+        dimension={"choices": make_dims_annotation(model)},
+        sigma={"min": 0.0},
+    )
+    def run_hessian_eigenvalues(
+        sigma: float = 1.0,
+        dimension: int = 2,
+    ) -> WidgetDataModel:
+        img = model_to_image(model)
+        out = img.hessian_eig(sigma=sigma, dims=norm_dims(dimension, img.axes))
+        return image_to_model(out, orig=model)
+
+    return run_hessian_eigenvalues
+
+
+@register_function(
+    title="Aggregate by Mask ...",
+    menus=MENUS,
+    types=[StandardType.IMAGE],
+    run_async=True,
+    command_id="himena-image:aggregate-by-mask",
+)
+def aggregate_by_mask(model: WidgetDataModel) -> Parametric:
+    """Aggregate an image by a mask."""
+
+    @configure_gui(
+        mask={"types": [StandardType.IMAGE]},
+        properties={"choices": REGIONPROPS_CHOICES, "widget_type": "Select"},
+        dimension={"choices": make_dims_annotation(model)},
+    )
+    def run_aggregate_by_mask(
+        mask: WidgetDataModel,
+        properties: list[str] = ["intensity_mean"],
+        dimension: int = 2,
+    ) -> WidgetDataModel:
+        img = model_to_image(model)
+        msk = model_to_image(mask)
+        dims = norm_dims(dimension, img.axes)
+        c_axes = [str(a) for a in img.axes if str(a) not in dims]
+        labels = np.zeros_like(msk.value, dtype=np.uint32)
+        dict_ = {a: [] for a in c_axes}
+        cur_label = 1
+        for sl, msk_slice in msk.iter(c_axes):
+            labels[sl][msk_slice] = cur_label
+            cur_label += 1
+            for i, axis_name in enumerate(c_axes):
+                dict_[axis_name].append(sl[i])
+        img.labels = labels
+        table = img.regionprops(properties=properties)
+        for key, prop in table.items():
+            dict_[key] = prop.ravel()
+        return WidgetDataModel(
+            value=dict_,
+            type=StandardType.DATAFRAME,
+            title=f"Properties of {model.title}",
+        )
+
+    return run_aggregate_by_mask

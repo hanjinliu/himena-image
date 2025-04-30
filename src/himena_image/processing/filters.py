@@ -20,7 +20,8 @@ MENUS = ["tools/image/process/filter", "/model_menu/process/filter"]
     title="Gaussian Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:0-filter-basic:gaussian_filter",
+    command_id="himena-image:gaussian-filter",
+    group="00-filter-basic",
     run_async=True,
 )
 def gaussian_filter(model: WidgetDataModel) -> Parametric:
@@ -46,7 +47,8 @@ def gaussian_filter(model: WidgetDataModel) -> Parametric:
     title="Median Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:0-filter-basic:median_filter",
+    command_id="himena-image:median-filter",
+    group="00-filter-basic",
     run_async=True,
 )
 def median_filter(model: WidgetDataModel) -> Parametric:
@@ -76,7 +78,8 @@ def median_filter(model: WidgetDataModel) -> Parametric:
     title="Mean Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:0-filter-basic:mean_filter",
+    command_id="himena-image:mean-filter",
+    group="00-filter-basic",
     run_async=True,
 )
 def mean_filter(model: WidgetDataModel) -> Parametric:
@@ -103,7 +106,8 @@ def mean_filter(model: WidgetDataModel) -> Parametric:
     title="Min Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:0-filter-basic:min_filter",
+    command_id="himena-image:min-filter",
+    group="00-filter-basic",
     run_async=True,
 )
 def min_filter(model: WidgetDataModel) -> Parametric:
@@ -130,7 +134,8 @@ def min_filter(model: WidgetDataModel) -> Parametric:
     title="Max Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:0-filter-basic:max_filter",
+    command_id="himena-image:max-filter",
+    group="00-filter-basic",
     run_async=True,
 )
 def max_filter(model: WidgetDataModel) -> Parametric:
@@ -157,7 +162,8 @@ def max_filter(model: WidgetDataModel) -> Parametric:
     title="STD Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:1-filter-variance:std_filter",
+    command_id="himena-image:std-filter",
+    group="01-filter-variance",
     run_async=True,
 )
 def std_filter(model: WidgetDataModel) -> Parametric:
@@ -186,7 +192,8 @@ def std_filter(model: WidgetDataModel) -> Parametric:
     title="Coef Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:1-filter-variance:coef_filter",
+    command_id="himena-image:coef-filter",
+    group="01-filter-variance",
     run_async=True,
 )
 def coef_filter(model: WidgetDataModel) -> Parametric:
@@ -215,7 +222,8 @@ def coef_filter(model: WidgetDataModel) -> Parametric:
     title="Difference of Gaussian (DoG) Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:2-filter-comp:dog_filter",
+    command_id="himena-image:dog-filter",
+    group="02-filter-composit",
     run_async=True,
 )
 def dog_filter(model: WidgetDataModel) -> Parametric:
@@ -239,7 +247,8 @@ def dog_filter(model: WidgetDataModel) -> Parametric:
     title="Laplacian Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:2-filter-comp:laplacian_filter",
+    command_id="himena-image:laplacian-filter",
+    group="02-filter-composit",
     run_async=True,
 )
 def laplacian_filter(model: WidgetDataModel) -> Parametric:
@@ -262,7 +271,8 @@ def laplacian_filter(model: WidgetDataModel) -> Parametric:
     title="Difference of Hessian (DoH) Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:2-filter-comp:doh_filter",
+    command_id="himena-image:doh-filter",
+    group="02-filter-composit",
     run_async=True,
 )
 def doh_filter(model: WidgetDataModel) -> Parametric:
@@ -285,7 +295,8 @@ def doh_filter(model: WidgetDataModel) -> Parametric:
     title="Laplacian of Gaussian (LoG) Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:2-filter-comp:log_filter",
+    command_id="himena-image:log-filter",
+    group="02-filter-composit",
     run_async=True,
 )
 def log_filter(model: WidgetDataModel) -> Parametric:
@@ -310,7 +321,8 @@ def log_filter(model: WidgetDataModel) -> Parametric:
     title="Rolling ball ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:9-filter-other:rolling_ball",
+    command_id="himena-image:rolling-ball",
+    group="90-filter-others",
     run_async=True,
 )
 def rolling_ball(model: WidgetDataModel) -> Parametric:
@@ -338,7 +350,8 @@ def rolling_ball(model: WidgetDataModel) -> Parametric:
 @register_function(
     title="Entropy filter ...",
     menus=MENUS,
-    command_id="himena-image:9-filter-other:entropy-filter",
+    command_id="himena-image:entropy-filter",
+    group="90-filter-others",
     run_async=True,
 )
 def entropy_filter(model: WidgetDataModel) -> Parametric:
@@ -359,7 +372,8 @@ def entropy_filter(model: WidgetDataModel) -> Parametric:
 @register_function(
     title="Enhance contrast ...",
     menus=MENUS,
-    command_id="himena-image:9-filter-other:enhance-contrast",
+    command_id="himena-image:enhance-contrast",
+    group="90-filter-others",
     run_async=True,
 )
 def enhance_contrast(model: WidgetDataModel) -> Parametric:
@@ -381,7 +395,8 @@ def enhance_contrast(model: WidgetDataModel) -> Parametric:
     title="Threshold ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:9-filter-other:threshold",
+    command_id="himena-image:threshold",
+    group="90-filter-others",
     run_async=True,
 )
 def threshold(model: WidgetDataModel) -> Parametric:
@@ -428,7 +443,8 @@ def threshold(model: WidgetDataModel) -> Parametric:
     title="Edge Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:0-filter-basic:edge_filter",
+    command_id="himena-image:edge-filter",
+    group="00-filter-basic",
     run_async=True,
 )
 def edge_filter(model: WidgetDataModel) -> Parametric:
@@ -453,7 +469,8 @@ def edge_filter(model: WidgetDataModel) -> Parametric:
     title="Smooth mask ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:9-filter-other:smooth_mask",
+    command_id="himena-image:smooth-mask",
+    group="90-filter-others",
     run_async=True,
 )
 def smooth_mask(model: WidgetDataModel) -> Parametric:
@@ -484,7 +501,8 @@ def smooth_mask(model: WidgetDataModel) -> Parametric:
     title="Kalman Filter ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:9-filter-other:kalman_filter",
+    command_id="himena-image:kalman-filter",
+    group="90-filter-others",
     run_async=True,
 )
 def kalman_filter(model: WidgetDataModel) -> Parametric:
