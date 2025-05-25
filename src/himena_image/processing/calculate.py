@@ -140,13 +140,16 @@ def _run_profile_line(
     indices: list[int | None],
     order: int = 3,
 ) -> WidgetDataModel:
+    """Compute the line profile of the image."""
     _indices = tuple(slice(None) if i is None else i for i in indices)
     img_slice = img[_indices]
     if isinstance(img_slice, ip.LazyImgArray):
         img_slice = img_slice.compute()
     order: int = 0 if img.dtype.kind == "b" else order
     if meta.is_rgb:
-        img_slice = np.moveaxis(img_slice, -1, 0)
+        img_slice = ip.asarray(np.moveaxis(img_slice, -1, 0), axes="cyx")
+        if img_slice.shape[0] == 4:
+            img_slice = img_slice[:3]  # RGB
     sliced = img_slice.reslice(coords, order=order)
 
     if sliced.ndim == 2:  # multi-channel
@@ -164,7 +167,10 @@ def _run_profile_line(
     df = {"distance": distance}
     for array, header in zip(sliced_arrays, slice_headers):
         df[header] = array
-    color_cycle = [Colormap(ch.colormap or "gray")(0.5).hex for ch in meta.channels]
+    if meta.is_rgb:
+        color_cycle = ["#FF0000", "#00FF00", "#0000FF"]
+    else:
+        color_cycle = [Colormap(ch.colormap or "gray")(0.5).hex for ch in meta.channels]
     return create_model(
         value=df,
         type=StandardType.DATAFRAME_PLOT,

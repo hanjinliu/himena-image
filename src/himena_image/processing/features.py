@@ -143,7 +143,7 @@ def hessian_eigenvalues(model: WidgetDataModel) -> Parametric:
         dimension: int = 2,
     ) -> WidgetDataModel:
         img = model_to_image(model)
-        out = img.hessian_eig(sigma=sigma, dims=norm_dims(dimension, img.axes))
+        out = img.hessian_eigval(sigma=sigma, dims=norm_dims(dimension, img.axes))
         return image_to_model(out, orig=model)
 
     return run_hessian_eigenvalues

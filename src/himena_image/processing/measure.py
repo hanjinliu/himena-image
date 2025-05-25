@@ -76,6 +76,9 @@ def _measure(
         raise ValueError("`current_indices` is not set.")
     current_slice = tuple(slice(None) if i is None else i for i in current_indices)
     arr_slice = arr.get_slice(current_slice)
+    if arr_slice.dtype == np.float16:
+        # scipy ndimage does not support float16
+        arr_slice = arr_slice.astype(np.float32)
     target = slice_array(roi, arr_slice)
     metrics = METRICS_SHARED | METRICS_ADDITIONAL.get(type(roi), {})
     output: dict[str, float] = {}
@@ -291,7 +294,6 @@ _METRICS_ELLIPSE: dict[str, _MetricsType[roi.EllipseRoi]] = {
     "area": lambda roi, ar_sl: roi.area(),
     "width": lambda roi, ar_sl: roi.width,
     "height": lambda roi, ar_sl: roi.height,
-    "circumference": lambda roi, ar_sl: roi.circumference(),
     "eccentricity": lambda roi, ar_sl: roi.eccentricity() if roi.area() > 0 else np.nan,
 }
 _METRICS_ROTATED_RECTANGLE: dict[str, _MetricsType[roi.RotatedRectangleRoi]] = {

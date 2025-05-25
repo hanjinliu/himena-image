@@ -1,10 +1,11 @@
 from functools import partial
 from pathlib import Path
-from typing import Sequence
+import struct
+from typing import Any, Sequence
 import zipfile
 import impy as ip
 import numpy as np
-from roifile import ROI_SUBTYPE, ImagejRoi, roiread, roiwrite, ROI_TYPE
+from roifile import ROI_OPTIONS, ROI_SUBTYPE, ImagejRoi, roiread, roiwrite, ROI_TYPE
 
 from himena import Parametric, StandardType, WidgetDataModel
 from himena.consts import MenuId
@@ -20,11 +21,15 @@ from himena_image.utils import image_to_model
 
 
 _SUPPORTED_EXT = frozenset(
-    [".tif", ".tiff", ".lsm",
-     ".mrc", ".rec", ".st", ".map", ".mrc.gz", ".map.gz",
-     ".nd2",
-     ]
+    [".tif", ".tiff", ".lsm", ".mrc", ".rec", ".st", ".map", ".nd2"]
 )  # fmt: skip
+_SUPPORTED_MULTI_EXT = frozenset([".mrc.gz", ".map.gz"])
+
+
+def _is_image_file(path: Path) -> bool:
+    return (
+        path.suffix in _SUPPORTED_EXT or "".join(path.suffixes) in _SUPPORTED_MULTI_EXT
+    )
 
 
 @register_reader_plugin
@@ -42,7 +47,7 @@ def read_image(path: Path):
 
 @read_image.define_matcher
 def _(path: Path):
-    if path.suffix in _SUPPORTED_EXT:
+    if _is_image_file(path):
         return StandardType.IMAGE
     return None
 
@@ -69,7 +74,7 @@ def write_image(model: WidgetDataModel, path: Path):
 
 @write_image.define_matcher
 def _(model: WidgetDataModel, path: Path):
-    return model.is_subtype_of(StandardType.ARRAY) and path.suffix in _SUPPORTED_EXT
+    return model.is_subtype_of(StandardType.ARRAY) and _is_image_file(path)
 
 
 @register_reader_plugin(priority=-10)
@@ -84,7 +89,7 @@ def read_image_as_labels(path: Path):
 
 @read_image_as_labels.define_matcher
 def _(path: Path):
-    if path.suffix in _SUPPORTED_EXT:
+    if _is_image_file(path):
         return StandardType.IMAGE_LABELS
     return None
 
@@ -140,7 +145,9 @@ def write_roi(model: WidgetDataModel, path: Path):
             "z_position": z,
             "c_position": c,
         }
-        ijrois.append(_from_standard_roi(roi, **multi_dims))
+        ijrois.append(_from_standard_roi(roi, multi_dims))
+    if path.exists():
+        path.unlink()
     roiwrite(path, ijrois)
     return None
 
@@ -181,19 +188,26 @@ def _to_standard_roi(ijroi: ImagejRoi) -> tuple[tuple[int, ...], _roi.RoiModel]:
 
     if ijroi.subtype == ROI_SUBTYPE.UNDEFINED:
         if ijroi.roitype == ROI_TYPE.RECT:
-            out = _roi.RectangleRoi(
-                x=ijroi.left - 1,
-                y=ijroi.top - 1,
-                width=ijroi.right - ijroi.left,
-                height=ijroi.bottom - ijroi.top,
-                name=name,
-            )
+            if ijroi.options == ROI_OPTIONS.SUB_PIXEL_RESOLUTION:
+                out = _roi.RectangleRoi(
+                    x=ijroi.xd,
+                    y=ijroi.yd,
+                    width=ijroi.widthd,
+                    height=ijroi.heightd,
+                    name=name,
+                )
+            else:
+                out = _roi.RectangleRoi(
+                    x=ijroi.left,
+                    y=ijroi.top,
+                    width=ijroi.right - ijroi.left,
+                    height=ijroi.bottom - ijroi.top,
+                    name=name,
+                )
         elif ijroi.roitype == ROI_TYPE.LINE:
             out = _roi.LineRoi(
-                x1=ijroi.x1 - 1,
-                y1=ijroi.y1 - 1,
-                x2=ijroi.x2 - 1,
-                y2=ijroi.y2 - 1,
+                start=(ijroi.x1 - 1, ijroi.y1 - 1),
+                end=(ijroi.x2 - 1, ijroi.y2 - 1),
                 name=name,
             )
         elif ijroi.roitype == ROI_TYPE.POINT:
@@ -209,30 +223,55 @@ def _to_standard_roi(ijroi: ImagejRoi) -> tuple[tuple[int, ...], _roi.RoiModel]:
             coords = _get_coords(ijroi)
             out = _roi.SegmentedLineRoi(xs=coords[:, 0], ys=coords[:, 1], name=name)
         elif ijroi.roitype == ROI_TYPE.OVAL:
-            out = _roi.EllipseRoi(
-                x=ijroi.left - 1,
-                y=ijroi.top - 1,
-                width=ijroi.right - ijroi.left,
-                height=ijroi.bottom - ijroi.top,
-                name=name,
-            )
+            if ijroi.options == ROI_OPTIONS.SUB_PIXEL_RESOLUTION:
+                out = _roi.EllipseRoi(
+                    x=ijroi.xd,
+                    y=ijroi.yd,
+                    width=ijroi.widthd,
+                    height=ijroi.heightd,
+                    name=name,
+                )
+            else:
+                out = _roi.EllipseRoi(
+                    x=ijroi.left,
+                    y=ijroi.top,
+                    width=ijroi.right - ijroi.left,
+                    height=ijroi.bottom - ijroi.top,
+                    name=name,
+                )
         else:
             raise ValueError(f"Unsupported ROI type: {ijroi.roitype!r}")
     elif ijroi.subtype == ROI_SUBTYPE.ROTATED_RECT:
-        coords = _get_coords(ijroi)
-        start = (coords[0] + coords[1]) / 2
-        end = (coords[2] + coords[3]) / 2
-        width = np.hypot(coords[0, 0] - coords[1, 0], coords[0, 1] - coords[1, 1])
+        width = _decode_rotated_roi_width(
+            (
+                ijroi.arrow_style_or_aspect_ratio,
+                ijroi.arrow_head_size,
+                ijroi.rounded_rect_arc_size,
+            ),
+            byteorder=ijroi.byteorder,
+        )
         out = _roi.RotatedRectangleRoi(
-            start=tuple(start),
-            end=tuple(end),
+            start=(ijroi.x1 - 1, ijroi.y1 - 1),
+            end=(ijroi.x2 - 1, ijroi.y2 - 1),
             width=width,
             name=name,
         )
     elif ijroi.subtype == ROI_SUBTYPE.ELLIPSE:
-        # ImageJ rotated ellipse is just a freehand line
-        coords = _get_coords(ijroi)
-        out = _roi.PolygonRoi(xs=coords[:, 0], ys=coords[:, 1], name=name)
+        ellipse_ratio = _decode_rotated_roi_width(
+            (
+                ijroi.arrow_style_or_aspect_ratio,
+                ijroi.arrow_head_size,
+                ijroi.rounded_rect_arc_size,
+            ),
+            byteorder=ijroi.byteorder,
+        )
+        length = np.sqrt((ijroi.x1 - ijroi.x2) ** 2 + (ijroi.y1 - ijroi.y2) ** 2)
+        out = _roi.RotatedEllipseRoi(
+            start=(ijroi.x1 - 1, ijroi.y1 - 1),
+            end=(ijroi.x2 - 1, ijroi.y2 - 1),
+            width=length * ellipse_ratio,
+            name=name,
+        )
     else:
         raise ValueError(f"Unsupported ROI subtype: {ijroi.subtype}")
     return (p, t, z, c), out
@@ -243,77 +282,124 @@ def _from_standard_roi(
     multi_dims: dict[str, int],
 ) -> ImagejRoi:
     if isinstance(roi, _roi.RectangleRoi):
+        y1, y2 = roi.y, roi.y + roi.height
+        x1, x2 = roi.x, roi.x + roi.width
         return ImagejRoi(
             roitype=ROI_TYPE.RECT,
             name=roi.name,
-            top=roi.y + 1,
-            left=roi.x + 1,
-            bottom=roi.y + roi.height + 1,
-            right=roi.x + roi.width + 1,
+            x1=x1,
+            x2=x2,
+            xd=x1,
+            widthd=roi.width,
+            y1=y1,
+            y2=y2,
+            yd=y1,
+            heightd=roi.height,
+            **_to_ij_kwargs(np.array([[x1, y1], [x1, y2], [x2, y2], [x2, y1]])),
             **multi_dims,
         )
     elif isinstance(roi, _roi.EllipseRoi):
+        y1, y2 = roi.y, roi.y + roi.height
+        x1, x2 = roi.x, roi.x + roi.width
         return ImagejRoi(
             roitype=ROI_TYPE.OVAL,
             name=roi.name,
-            top=roi.y + 1,
-            left=roi.x + 1,
-            bottom=roi.y + roi.height + 1,
-            right=roi.x + roi.width + 1,
+            x1=x1,
+            x2=x2,
+            xd=x1,
+            widthd=roi.width,
+            y1=y1,
+            y2=y2,
+            yd=y1,
+            heightd=roi.height,
+            **_to_ij_kwargs(np.array([[x1, y1], [x1, y2], [x2, y2], [x2, y1]])),
             **multi_dims,
         )
     elif isinstance(roi, _roi.LineRoi):
+        x1, y1 = np.ones(2) + roi.start
+        x2, y2 = np.ones(2) + roi.end
         return ImagejRoi(
             roitype=ROI_TYPE.LINE,
             name=roi.name,
-            x1=roi.x1 + 1,
-            y1=roi.y1 + 1,
-            x2=roi.x2 + 1,
-            y2=roi.y2 + 1,
+            x1=x1,
+            y1=y1,
+            x2=x2,
+            y2=y2,
+            **_to_ij_kwargs(np.array([[x1, y1], [x2, y2]])),
             **multi_dims,
         )
     elif isinstance(roi, _roi.PointRoi2D):
         return ImagejRoi(
             roitype=ROI_TYPE.POINT,
             name=roi.name,
-            subpixelresolution=True,
-            subpixel_coordinates=np.array([[roi.y + 1, roi.x + 1]]),
-            **multi_dims,
-        )
-    elif isinstance(roi, _roi.PointsRoi2D):
-        return ImagejRoi(
-            roitype=ROI_TYPE.POINT,
-            name=roi.name,
-            subpixelresolution=True,
-            subpixel_coordinates=np.stack([roi.ys + 1, roi.xs + 1], axis=1),
+            **_to_ij_kwargs(np.array([[roi.x + 1, roi.y + 1]])),
             **multi_dims,
         )
     elif isinstance(roi, _roi.PolygonRoi):
         return ImagejRoi(
             roitype=ROI_TYPE.POLYGON,
             name=roi.name,
-            subpixelresolution=True,
-            subpixel_coordinates=np.stack([roi.ys + 1, roi.xs + 1], axis=1),
+            **_to_ij_kwargs(np.stack([roi.xs + 1, roi.ys + 1], axis=1)),
             **multi_dims,
         )
     elif isinstance(roi, _roi.SegmentedLineRoi):
         return ImagejRoi(
             roitype=ROI_TYPE.POLYLINE,
             name=roi.name,
-            subpixelresolution=True,
-            subpixel_coordinates=np.stack([roi.ys + 1, roi.xs + 1], axis=1),
+            **_to_ij_kwargs(np.stack([roi.xs + 1, roi.ys + 1], axis=1)),
             **multi_dims,
         )
     elif isinstance(roi, _roi.RotatedRectangleRoi):
-        coords = np.stack(roi._get_vertices(), axis=0) + 1
+        enc = _encode_rotated_roi_width(roi.width)
+        x1, y1 = np.ones(2) + roi.start
+        x2, y2 = np.ones(2) + roi.end
         return ImagejRoi(
             roitype=ROI_TYPE.FREEHAND,
             subtype=ROI_SUBTYPE.ROTATED_RECT,
             name=roi.name,
-            subpixelresolution=True,
-            subpixel_coordinates=coords,
+            x1=x1,
+            y1=y1,
+            x2=x2,
+            y2=y2,
+            arrow_style_or_aspect_ratio=enc[0],
+            arrow_head_size=enc[1],
+            rounded_rect_arc_size=enc[2],
+            **_to_ij_kwargs(np.array([[x1, y1], [x2, y2]])),
             **multi_dims,
         )
+    elif isinstance(roi, _roi.RotatedEllipseRoi):
+        enc = _encode_rotated_roi_width(roi.width / roi.length())
+        a = roi.length() / 2
+        b = roi.width / 2
+        phi = roi.angle_radian()
+        ts = np.linspace(0, 2 * np.pi, 72, endpoint=False)
+        start = np.array(roi.start) + 1
+        end = np.array(roi.end) + 1
+        center = (start + end) / 2
+        xs = a * np.cos(ts) * np.cos(phi) - b * np.sin(ts) * np.sin(phi) + center[0]
+        ys = a * np.cos(ts) * np.sin(phi) + b * np.sin(ts) * np.cos(phi) + center[1]
+        return ImagejRoi(
+            roitype=ROI_TYPE.FREEHAND,
+            subtype=ROI_SUBTYPE.ELLIPSE,
+            name=roi.name,
+            x1=start[0],
+            y1=start[1],
+            x2=end[0],
+            y2=end[1],
+            arrow_style_or_aspect_ratio=enc[0],
+            arrow_head_size=enc[1],
+            rounded_rect_arc_size=enc[2],
+            **_to_ij_kwargs(np.stack([xs, ys], axis=1)),
+            **multi_dims,
+        )
+    elif isinstance(roi, _roi.PointsRoi2D):
+        return ImagejRoi(
+            roitype=ROI_TYPE.POINT,
+            name=roi.name,
+            **_to_ij_kwargs(np.stack([roi.xs + 1, roi.ys + 1], axis=1)),
+            **multi_dims,
+        )
+
     raise ValueError(f"Unsupported ROI type: {type(roi)}")
 
 
@@ -324,5 +410,47 @@ def _to_ij_position(
 ) -> np.ndarray:
     for cand in candidates:
         if cand in axis_names:
-            return indices[:, axis_names.index(cand)]
-    return np.full(indices.shape[0], None, dtype=np.object_)
+            return indices[:, axis_names.index(cand)] + 1
+    return np.full(indices.shape[0], 0, dtype=np.int32)
+
+
+def _encode_rotated_roi_width(
+    width: float, byteorder: str = ">"
+) -> tuple[int, int, int]:
+    s = struct.pack(byteorder + "f", width)
+    return struct.unpack(byteorder + "BBh", s)
+
+
+def _decode_rotated_roi_width(
+    ints: tuple[int, int, int], byteorder: str = ">"
+) -> float:
+    s = struct.pack(byteorder + "BBh", *ints)
+    return struct.unpack(byteorder + "f", s)[0]
+
+
+def _to_ij_kwargs(coords: np.ndarray) -> dict[str, Any]:
+    float_part = np.modf(coords)[0]
+    if float_part.max() > 1e-6:
+        int_coords = coords.round().astype(np.int32)
+        left_top = int_coords.min(axis=0)
+        return {
+            "integer_coordinates": int_coords - left_top,
+            "subpixel_coordinates": np.asarray(coords, dtype=np.float32),
+            "n_coordinates": coords.shape[0],
+            "options": ROI_OPTIONS.SUB_PIXEL_RESOLUTION,
+            "top": int(int_coords[:, 1].min()),
+            "left": int(int_coords[:, 0].min()),
+            "bottom": int(int_coords[:, 1].max() + 1),
+            "right": int(int_coords[:, 0].max() + 1),
+        }
+    else:
+        int_coords = coords.astype(np.int32)
+        left_top = int_coords.min(axis=0)
+        return {
+            "integer_coordinates": int_coords - left_top,
+            "n_coordinates": coords.shape[0],
+            "top": int(int_coords[:, 1].min()),
+            "left": int(int_coords[:, 0].min()),
+            "bottom": int(int_coords[:, 1].max() + 1),
+            "right": int(int_coords[:, 0].max() + 1),
+        }
