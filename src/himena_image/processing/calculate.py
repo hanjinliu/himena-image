@@ -72,9 +72,10 @@ def invert(model: WidgetDataModel) -> WidgetDataModel:
     title="Profile Line",
     menus=MENU,
     types=[StandardType.IMAGE],
-    command_id="himena-image:profile:profile-line",
+    command_id="himena-image:profile-line",
     keybindings=["/"],
     run_async=True,
+    group="profile",
 )
 def profile_line(model: WidgetDataModel) -> Parametric:
     """Get the line profile of the current image slice."""
@@ -100,7 +101,8 @@ def profile_line(model: WidgetDataModel) -> Parametric:
     title="Profile Line (Live)",
     menus=MENU,
     types=[StandardType.IMAGE],
-    command_id="himena-image:profile:profile-line-live",
+    command_id="himena-image:profile-line-live",
+    group="profile",
 )
 def profile_line_live(win: SubWindow[QImageView]):
     """Live-plot the line profile of the current image slice."""
@@ -179,17 +181,17 @@ def _run_profile_line(
 
 
 @register_function(
-    title="Kymograph",
+    title="Kymograph ...",
     menus=MENU,
     types=[StandardType.IMAGE],
     run_async=True,
-    command_id="himena-image:profile:kymograph",
+    command_id="himena-image:kymograph",
+    group="profile",
 )
 def kymograph(model: WidgetDataModel) -> Parametric:
     """Calculate the kymograph along the specified line."""
     if not isinstance(meta := model.metadata, ImageMeta):
         raise ValueError("Metadata is missing.")
-
     if meta.current_indices is None:
         raise ValueError("`current_indices` is missing in the image metadata")
     if meta.axes is None:
@@ -201,11 +203,13 @@ def kymograph(model: WidgetDataModel) -> Parametric:
         along_choices.pop(meta.channel_axis)
         stack_over_default.append(stack_over_choices[meta.channel_axis])
     along_choices = along_choices[:-2]  # remove xy
+    along_default = "t" if "t" in along_choices else along_choices[0]
     stack_over_choices = stack_over_choices[:-2]  # remove xy
 
     @configure_gui(
         coords={"bind": _get_profile_coords(meta)},
-        along={"choices": along_choices},
+        current_indices={"bind": meta.current_indices},
+        along={"choices": along_choices, "value": along_default},
         stack_over={
             "choices": stack_over_choices,
             "widget_type": "Select",
@@ -215,6 +219,7 @@ def kymograph(model: WidgetDataModel) -> Parametric:
     )
     def run_kymograph(
         coords,
+        current_indices: list[int | None],
         along: str,
         stack_over: list[str],
         same_dtype: bool = True,
@@ -222,29 +227,124 @@ def kymograph(model: WidgetDataModel) -> Parametric:
         if along in stack_over:
             raise ValueError("Duplicated axis name in `along` and `stack_over`.")
         img = model_to_image(model)
-        # NOTE: ImgArray supports __getitem__ with dict
-        sl: dict[str, int] = {}
-        for i, axis in enumerate(img.axes):
-            axis = str(axis)
-            if axis == along or axis in stack_over:
-                continue
-            if not hasattr(meta.current_indices[i], "__index__"):
-                continue
-            sl[axis] = meta.current_indices[i]
-        if sl:
-            img_slice = img[sl]
-        else:
-            img_slice = img
-        order = 0 if img.dtype.kind == "b" else 3
-        if same_dtype:
-            dtype = img.dtype
-        else:
-            dtype = None
-        sliced = ip.asarray(img_slice.reslice(coords, order=order), dtype=dtype)
-        sliced = np.swapaxes(sliced, along, -2)
+        sliced = _build_kymograph(
+            img,
+            coords,
+            current_indices,
+            along=along,
+            stack_over=stack_over,
+            same_dtype=same_dtype,
+        )
         return image_to_model(sliced, title=f"Kymograph of {model.title}")
 
     return run_kymograph
+
+
+@register_function(
+    title="Multi Kymograph ...",
+    menus=MENU,
+    types=[StandardType.IMAGE],
+    run_async=True,
+    command_id="himena-image:kymograph-multi",
+    group="profile",
+)
+def kymograph_multi(model: WidgetDataModel) -> Parametric:
+    """Calculate the kymograph for each ROI."""
+    if not isinstance(meta := model.metadata, ImageMeta):
+        raise ValueError("Metadata is missing.")
+    if meta.current_indices is None:
+        raise ValueError("`current_indices` is missing in the image metadata")
+    if meta.axes is None:
+        raise ValueError("`axes` is missing in the image metadata")
+    along_choices = [axis.name for axis in meta.axes]
+    stack_over_choices = along_choices.copy()
+    stack_over_default = []
+    if meta.channel_axis is not None:
+        along_choices.pop(meta.channel_axis)
+        stack_over_default.append(stack_over_choices[meta.channel_axis])
+    along_choices = along_choices[:-2]  # remove xy
+    along_default = "t" if "t" in along_choices else along_choices[0]
+    stack_over_choices = stack_over_choices[:-2]  # remove xy
+
+    coords = []
+    for r in meta.unwrap_rois():
+        points = _roi_to_points(r)
+        if points is None:
+            continue
+        coords.append(points)
+    if not coords:
+        raise ValueError("No valid ROIs found for kymograph calculation.")
+
+    @configure_gui(
+        coords={"bind": coords},
+        current_indices={"bind": meta.current_indices},
+        along={"choices": along_choices, "value": along_default},
+        stack_over={
+            "choices": stack_over_choices,
+            "widget_type": "Select",
+            "value": stack_over_default,
+        },
+        same_dtype={"label": "Keep same data type"},
+    )
+    def run_kymograph_multi(
+        coords,
+        current_indices: list[int | None],
+        along: str,
+        stack_over: list[str],
+        same_dtype: bool = True,
+    ) -> WidgetDataModel:
+        if along in stack_over:
+            raise ValueError("Duplicated axis name in `along` and `stack_over`.")
+        img = model_to_image(model)
+        models: list[WidgetDataModel] = []
+        for idx, each_coords in enumerate(coords):
+            sliced = _build_kymograph(
+                img,
+                each_coords,
+                current_indices,
+                along=along,
+                stack_over=stack_over,
+                same_dtype=same_dtype,
+            )
+            out = image_to_model(sliced, title=f"Kymograph {idx}")
+            models.append(out)
+        return create_model(
+            models,
+            type=StandardType.MODELS,
+            title=f"Kymographs of {model.title}",
+        )
+
+    return run_kymograph_multi
+
+
+def _build_kymograph(
+    img: ip.ImgArray,
+    coords,
+    current_indices: list[int | None],
+    along: str,
+    stack_over: list[str],
+    same_dtype: bool = True,
+) -> ip.ImgArray:
+    # NOTE: ImgArray supports __getitem__ with dict
+    sl: dict[str, int] = {}
+    for i, axis in enumerate(img.axes):
+        axis = str(axis)
+        if axis == along or axis in stack_over:
+            continue
+        if not hasattr(current_indices[i], "__index__"):
+            continue
+        sl[axis] = current_indices[i]
+    if sl:
+        img_slice = img[sl]
+    else:
+        img_slice = img
+    order = 0 if img.dtype.kind == "b" else 3
+    if same_dtype:
+        dtype = img.dtype
+    else:
+        dtype = None
+    sliced = ip.asarray(img_slice.reslice(coords, order=order), dtype=dtype)
+    return np.swapaxes(sliced, along, -2)
 
 
 def _channed_name(ch: str | None, i: int) -> str:
@@ -254,16 +354,23 @@ def _channed_name(ch: str | None, i: int) -> str:
 
 
 def _get_profile_coords(meta: ImageMeta) -> list[list[float]]:
-    if isinstance(r := meta.current_roi, roi.LineRoi):
-        points = [[r.y1, r.x1], [r.y2, r.x2]]
-    elif isinstance(r := meta.current_roi, roi.SegmentedLineRoi):
-        points = np.stack([r.ys, r.xs], axis=-1).tolist()
-    else:
+    points = _roi_to_points(meta.current_roi)
+    if points is None:
         raise TypeError(
             "`profile_line` requires a line or segmented line ROI, but the current ROI "
-            f"item is {r!r}."
+            f"item is {meta.current_roi!r}."
         )
     return points
+
+
+def _roi_to_points(r) -> list[list[float]] | None:
+    """Convert a ROI to a list of points."""
+    if isinstance(r, roi.LineRoi):
+        return [[r.y1, r.x1], [r.y2, r.x2]]
+    elif isinstance(r, roi.SegmentedLineRoi):
+        return np.stack([r.ys, r.xs], axis=-1).tolist()
+    else:
+        return None
 
 
 def _get_indices_channel_composite(meta: ImageMeta):
