@@ -186,6 +186,7 @@ def _run_profile_line(
     types=[StandardType.IMAGE],
     run_async=True,
     command_id="himena-image:kymograph",
+    keybindings=["k"],
     group="profile",
 )
 def kymograph(model: WidgetDataModel) -> Parametric:

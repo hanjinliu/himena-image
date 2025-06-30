@@ -98,18 +98,20 @@ REGIONPROPS_CHOICES = [
     run_async=True,
     command_id="himena-image:region-properties",
 )
-def region_properties(model: WidgetDataModel) -> Parametric:
+def region_properties() -> Parametric:
     """Measure region properties of an image."""
 
     @configure_gui(
+        image={"types": [StandardType.IMAGE]},
         labels={"types": [StandardType.IMAGE_LABELS]},
         properties={"choices": REGIONPROPS_CHOICES, "widget_type": "Select"},
     )
     def run_region_properties(
+        image: WidgetDataModel,
         labels: WidgetDataModel[ip.Label],
         properties: list[str] = ["intensity_mean"],
     ) -> WidgetDataModel:
-        img = model_to_image(model)
+        img = model_to_image(image)
         img.labels = labels.value
         table = img.regionprops(properties=properties)
         dict_ = {}
@@ -118,7 +120,7 @@ def region_properties(model: WidgetDataModel) -> Parametric:
         return WidgetDataModel(
             value=dict_,
             type=StandardType.DATAFRAME,
-            title=f"Properties of {model.title}",
+            title=f"Properties of {image.title}",
         )
 
     return run_region_properties
