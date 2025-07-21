@@ -21,7 +21,7 @@ from himena_image.utils import image_to_model
 
 
 _SUPPORTED_EXT = frozenset(
-    [".tif", ".tiff", ".lsm", ".mrc", ".rec", ".st", ".map", ".nd2"]
+    [".tif", ".tiff", ".lsm", ".mrc", ".rec", ".st", ".map", ".nd2", ".czi"]
 )  # fmt: skip
 _SUPPORTED_MULTI_EXT = frozenset([".mrc.gz", ".map.gz"])
 

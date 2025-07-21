@@ -16,8 +16,9 @@ MENUS = ["tools/image/exposure", "/model_menu/exposure"]
     title="Histogram",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:exposure:histogram",
+    command_id="himena-image:histogram",
     run_async=True,
+    group="exposure",
 )
 def histogram(model: WidgetDataModel) -> Parametric:
     """Show histogram of the image."""
@@ -73,7 +74,8 @@ def histogram(model: WidgetDataModel) -> Parametric:
     title="Auto contrast at selection",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:exposure:auto-contrast-selection",
+    command_id="himena-image:auto-contrast-selection",
+    group="exposure",
 )
 def auto_contrast_at_selection(win: SubWindow):
     """Auto contrast the image."""
@@ -106,7 +108,8 @@ def auto_contrast_at_selection(win: SubWindow):
     title="Propagate contrast ...",
     menus=MENUS,
     types=[StandardType.IMAGE],
-    command_id="himena-image:exposure:propagate-contrast",
+    command_id="himena-image:propagate-contrast",
+    group="exposure",
 )
 def propagate_contrast(model: WidgetDataModel, tab: TabArea):
     """Propagate contrast to other images in the same tab area."""

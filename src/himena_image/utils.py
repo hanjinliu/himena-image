@@ -76,6 +76,7 @@ def label_to_model(
 ) -> WidgetDataModel:
     out = image_to_model(img, title, is_rgb, orig, is_previewing)
     out.type = StandardType.IMAGE_LABELS
+    out.metadata.channels = []
     return out
 
 
