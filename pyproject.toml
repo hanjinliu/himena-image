@@ -24,7 +24,7 @@ classifiers = [
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
-  "himena>=0.0.10",
+  "himena>=0.0.13",
   "ndv",
   "impy-array>=2.4.9",
   "roifile>=2024.5.24",
@@ -88,3 +88,4 @@ exclude_lines = [
 "New and Samples" = "himena_image.new"
 "Image Processing and Analysis" = "himena_image.processing"
 "Image Viewer Widgets" = "himena_image.widgets"
+"ImageJ Utilities" = "himena_image.ij"
