@@ -4,12 +4,13 @@ import struct
 from typing import Any, Sequence
 import zipfile
 import impy as ip
+from impy.arrays.bases import MetaArray
 import numpy as np
 from roifile import ROI_OPTIONS, ROI_SUBTYPE, ImagejRoi, roiread, roiwrite, ROI_TYPE
 
-from himena import Parametric, StandardType, WidgetDataModel
+from himena import MainWindow, Parametric, StandardType, WidgetDataModel
 from himena.consts import MenuId
-from himena.standards.model_meta import ImageMeta
+from himena.standards.model_meta import ImageMeta, DimAxis
 from himena.standards import roi as _roi
 from himena.plugins import (
     register_reader_plugin,
@@ -30,6 +31,29 @@ def _is_image_file(path: Path) -> bool:
     return (
         path.suffix in _SUPPORTED_EXT or "".join(path.suffixes) in _SUPPORTED_MULTI_EXT
     )
+
+
+def on_himena_startup(ui: MainWindow):
+    @ui.object_type_map.register
+    def ip_image_array(value: Any):
+        if isinstance(value, (MetaArray, ip.LazyImgArray)):
+            axes = []
+            for axis in value.axes:
+                dimaxis = DimAxis(name=str(axis), scale=axis.scale, unit=axis.unit)
+                axes.append(dimaxis)
+            channel_axis_index = None
+            if "c" in value.axes:
+                channel_axis_index = value.axes.index("c")
+            if isinstance(value, ip.Label):
+                typ = StandardType.IMAGE_LABELS
+            else:
+                typ = StandardType.IMAGE
+            return (
+                typ,
+                value.value,
+                ImageMeta(axes=axes, channel_axis=channel_axis_index),
+            )
+        return None
 
 
 @register_reader_plugin
