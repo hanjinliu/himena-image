@@ -53,14 +53,18 @@ def on_himena_startup(ui: MainWindow):
                 value.value,
                 ImageMeta(axes=axes, channel_axis=channel_axis_index),
             )
-        return None
 
 
 @register_reader_plugin
 def read_image(path: Path):
     """Read as a image model."""
     img = ip.imread(path)
-    is_rgb = "c" in img.axes and path.suffix in [".png", ".jpg", ".jpeg"]
+    if path.suffix in [".png", ".jpg", ".jpeg"]:
+        is_rgb = "c" in img.axes
+    elif path.suffix in [".tif", ".tiff"]:
+        is_rgb = "s" in img.axes
+    else:
+        is_rgb = False
     model = image_to_model(img, is_rgb=is_rgb)
     if path.suffix == ".nd2":
         model.extension_default = ".tif"  # ND2 writer not supported yet
