@@ -20,13 +20,14 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
   "himena>=0.0.13",
   "ndv",
-  "impy-array>=2.4.9",
+  "impy-array>=2.5.0",
   "roifile>=2024.5.24",
 ]
 
@@ -41,6 +42,7 @@ testing = [
   "pytest",
   "pytest-cov",
   "pyqt6",
+  "click!=8.3.0",
 ]
 
 [project.urls]
