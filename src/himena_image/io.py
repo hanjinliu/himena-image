@@ -156,28 +156,36 @@ def _(path: Path):
 
 @register_writer_plugin
 def write_roi(model: WidgetDataModel, path: Path):
+    """Save ROI list as a ImageJ ROI file."""
     if not isinstance(rlist := model.value, _roi.RoiListModel):
         raise ValueError(f"Must be a RoiListModel, got {type(rlist)}")
     _ij_position_getter = partial(
         _to_ij_position, rlist.indices, axis_names=rlist.axis_names
     )
-    p_s = _ij_position_getter(["p", "position"])
-    t_s = _ij_position_getter(["t", "time"])
-    z_s = _ij_position_getter(["z", "slice"])
-    c_s = _ij_position_getter(["c", "channel"])
     ijrois: list[ImagejRoi] = []
+    # ImageJ tend to use a simple stack format for 3D ROIs
+    if len(rlist.axis_names) == 3:
+        p_s = _ij_position_getter(["z", "slice", "t", "time"])
+        t_s = z_s = np.full_like(p_s, -1)
+    else:
+        p_s = _ij_position_getter(["p", "position"])
+        t_s = _ij_position_getter(["t", "time"])
+        z_s = _ij_position_getter(["z", "slice"])
+    c_s = _ij_position_getter(["c", "channel"])
     for p, t, z, c, roi in zip(p_s, t_s, z_s, c_s, rlist.items):
-        multi_dims = {
-            "position": p,
-            "t_position": t,
-            "z_position": z,
-            "c_position": c,
-        }
+        multi_dims = {}
+        if p >= 0:
+            multi_dims["position"] = int(p)
+        if t >= 0:
+            multi_dims["time"] = int(t)
+        if z >= 0:
+            multi_dims["slice"] = int(z)
+        if c >= 0:
+            multi_dims["channel"] = int(c)
         ijrois.append(_from_standard_roi(roi, multi_dims))
     if path.exists():
         path.unlink()
     roiwrite(path, ijrois)
-    return None
 
 
 @write_roi.define_matcher
@@ -435,11 +443,11 @@ def _to_ij_position(
     indices: np.ndarray,
     candidates: list[str],
     axis_names: list[str],
-) -> np.ndarray:
+) -> np.ndarray | None:
     for cand in candidates:
         if cand in axis_names:
             return indices[:, axis_names.index(cand)] + 1
-    return np.full(indices.shape[0], 0, dtype=np.int32)
+    return np.full(indices.shape[0], -1, dtype=np.int32)
 
 
 def _encode_rotated_roi_width(
